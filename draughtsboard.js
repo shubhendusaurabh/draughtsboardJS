@@ -10,7 +10,7 @@ function validMove(move) {
   // move should be a string
   if (typeof move !== 'string') return false;
 
-  // move should be in the form of "e2-e4", "f6-d5"
+  // move should be in the form of "27x31", "23-32"
   var tmp = move.split(/-|x/);
   if (tmp.length !== 2) return false;
 
@@ -31,23 +31,12 @@ function validPieceCode(code) {
 function validFen(fen) {
   if (typeof fen !== 'string') return false;
 
-  // cut off any move, castling, etc info from the end
-  // we're only interested in position information
-  fen = fen.replace(/ .+$/, '');
-
-  // FEN should be 8 sections separated by slashes
-  var chunks = fen.split('/');
-  if (chunks.length !== 8) return false;
-
-  // check the piece sections
-  for (var i = 0; i < 8; i++) {
-    if (chunks[i] === '' ||
-        chunks[i].length > 8 ||
-        chunks[i].search(/[^kqrbnpKQRNBP1-8]/) !== -1) {
-      return false;
-    }
+  var FENPattern = /^(W|B):(W|B)((?:K?\d*)(?:,K?\d+)*?)(?::(W|B)((?:K?\d*)(?:,K?\d+)*?))?$/;
+  var matches = FENPattern.exec(fen);
+  if (matches != null) {
+    var blackPieces = matches[1];
+    var whitePieces = matches[2];
   }
-
   return true;
 }
 
@@ -98,30 +87,51 @@ function fenToObj(fen) {
 
   // cut off any move, castling, etc info from the end
   // we're only interested in position information
-  fen = fen.replace(/ .+$/, '');
+  fen = fen.replace(/\s+/g, '');
+  fen = fen.replace(/\..*$/, '')
 
-  var rows = fen.split('/');
-  var position = {};
+  var rows = fen.split(':');
+  var position = [];
 
   var currentRow = 10;
-  for (var i = 0; i < 10; i++) {
-    var row = rows[i].split('');
-    var colIndex = 0;
+  var colIndex = 0;
 
-    // loop through each character in the FEN section
-    for (var j = 0; j < row.length; j++) {
-      // number / empty squares
-      if (row[j].search(/[1-10]/) !== -1) {
-        var emptySquares = parseInt(row[j], 10);
-        colIndex += emptySquares;
+  for (var i = 1; i <= 2; i++) {
+
+    var color = rows[i].substr(0, 1);
+    var row = rows[i].substr(1);
+    if (row.indexOf('-') !== -1) {
+      row = row.split('-');
+      console.log(parseInt(row[1]), parseInt(row[0]));
+      for (var j = parseInt(row[0]); j <= parseInt(row[1], 10); j++) {
+        position[j] = color.toLowerCase();
+        // console.log(position);
       }
-      // piece
-      else {
-        var square = COLUMNS[colIndex] + currentRow;
-        position[square] = fenToPieceCode(row[j]);
-        colIndex++;
+    } else {
+      row = row.split(',');
+      console.log(row);
+      for (var j = 0; j < row.length; j++) {
+        console.log(position);
+        position[j] = row[j];
       }
     }
+    console.log(rows[i], row, color, position);
+
+
+    // loop through each character in the FEN section
+    // for (var j = 0; j < row.length; j++) {
+    //   // number / empty squares
+    //   if (row[j].search(/[1-10]/) !== -1) {
+    //     var emptySquares = parseInt(row[j], 10);
+    //     colIndex += emptySquares;
+    //   }
+    //   // piece
+    //   else {
+    //     var square = COLUMNS[colIndex] + currentRow;
+    //     position[square] = fenToPieceCode(row[j]);
+    //     colIndex++;
+    //   }
+    // }
 
     currentRow--;
   }
@@ -160,16 +170,6 @@ function objToFen(obj) {
 
     currentRow--;
   }
-
-  // squeeze the numbers together
-  // haha, I love this solution...
-  fen = fen.replace(/11111111/g, '8');
-  fen = fen.replace(/1111111/g, '7');
-  fen = fen.replace(/111111/g, '6');
-  fen = fen.replace(/11111/g, '5');
-  fen = fen.replace(/1111/g, '4');
-  fen = fen.replace(/111/g, '3');
-  fen = fen.replace(/11/g, '2');
 
   return fen;
 }
@@ -485,7 +485,7 @@ function expandConfig() {
 // calculates square size based on the width of the container
 // got a little CSS black magic here, so let me explain:
 // get the width of the container element (could be anything), reduce by 1 for
-// fudge factor, and then keep reducing until we find an exact mod 8 for
+// fudge factor, and then keep reducing until we find an exact mod 10 for
 // our square size
 function calculateSquareSize() {
   var containerWidth = parseInt(containerEl.width(), 10);
@@ -508,20 +508,20 @@ function calculateSquareSize() {
 // create random IDs for elements
 function createElIds() {
   // squares on the board
-  for (var i = 0; i < COLUMNS.length; i++) {
-    for (var j = 1; j <= 8; j++) {
-      var square = COLUMNS[i] + j;
+  console.log(COLUMNS.length);
+  for (var i = 0; i <= 9; i++) {
+    for (var j = 1; j <= 10; j++) {
+      var square = (i * 10) + j;
+      // console.log(parseInt(COLUMNS[i], 10) + j);
       SQUARE_ELS_IDS[square] = square + '-' + uuid();
     }
   }
+  // console.log(SQUARE_ELS_IDS);
 
   // spare pieces
   var pieces = 'bBwW'.split('');
   for (var i = 0; i < pieces.length; i++) {
-    var whitePiece = 'w' + pieces[i];
-    var blackPiece = 'b' + pieces[i];
-    SPARE_PIECE_ELS_IDS[whitePiece] = whitePiece + '-' + uuid();
-    SPARE_PIECE_ELS_IDS[blackPiece] = blackPiece + '-' + uuid();
+    SPARE_PIECE_ELS_IDS[pieces[i]] = pieces[i] + '-' + uuid();
   }
 }
 
@@ -583,32 +583,37 @@ function buildBoard(orientation) {
   var squareColor = 'white';
   for (var i = 0; i < 10; i++) {
     html += '<div class="' + CSS.row + '">';
-    for (var j = 0; j < 10; j++) {
-      var square = alpha[j] + row;
+    for (var j = 1; j <= 10; j++) {
+      var square = (parseInt(alpha[i], 10) * 10) + j;
+      // console.log(i%2==0, j, row, square%2==0);
+      if (squareColor == 'white') {
+        html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
+          'square-' + square + '" ' +
+          'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px">';
+      } else {
+        html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
+          'square-' + square + '" ' +
+          'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px" ' +
+          'id="' + SQUARE_ELS_IDS[Math.round(square/2)] + '" ' +
+          'data-square="' + Math.round(square/2) + '">';
 
-      html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
-        'square-' + square + '" ' +
-        'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px" ' +
-        'id="' + SQUARE_ELS_IDS[square] + '" ' +
-        'data-square="' + square + '">';
-
-      if (cfg.showNotation === true) {
-        // alpha notation
-        if ((orientation === 'white' && row === 1) ||
-            (orientation === 'black' && row === 10)) {
-          html += '<div class="' + CSS.notation + ' ' + CSS.alpha + '">' +
-            alpha[j] + '</div>';
-        }
-
-        // numeric notation
-        if (j === 0) {
-          html += '<div class="' + CSS.notation + ' ' + CSS.numeric + '">' +
-            row + '</div>';
+        if (cfg.showNotation === true) {
+          // alpha notation
+          // if ((orientation === 'white' && row === 1) ||
+              // (orientation === 'black' && row === 10)) {
+            html += '<div class="' + CSS.notation + ' ' + CSS.alpha + '">' +
+              Math.round(square/2) + '</div>';
+          // }
+// console.log(square/2, i, j);
+          // numeric notation
+          if (j === 0) {
+            html += '<div class="' + CSS.notation + ' ' + CSS.numeric + '">' +
+              row + '</div>';
+          }
         }
       }
-
       html += '</div>'; // end .square
-
+// console.log(html);
       squareColor = (squareColor === 'white' ? 'black' : 'white');
     }
     html += '<div class="' + CSS.clearfix + '"></div></div>';
@@ -641,6 +646,7 @@ function buildPieceImgSrc(piece) {
 }
 
 function buildPiece(piece, hidden, id) {
+  // console.trace('building pejd');
   var html = '<img src="' + buildPieceImgSrc(piece) + '" ';
   if (id && typeof id === 'string') {
     html += 'id="' + id + '" ';
@@ -961,10 +967,11 @@ function drawPositionInstant() {
   boardEl.find('.' + CSS.piece).remove();
 
   // add the pieces
+  // console.log(CURRENT_POSITION.length, SQUARE_ELS_IDS);
   for (var i in CURRENT_POSITION) {
     if (CURRENT_POSITION.hasOwnProperty(i) !== true) continue;
-
-    $('#' + SQUARE_ELS_IDS[i]).append(buildPiece(CURRENT_POSITION[i]));
+    if (CURRENT_POSITION[i] !== null)
+      $('#' + SQUARE_ELS_IDS[i]).append(buildPiece(CURRENT_POSITION[i]));
   }
 }
 
@@ -1663,7 +1670,7 @@ function initDom() {
 
   // create the drag piece
   var draggedPieceId = uuid();
-  $('body').append(buildPiece('wP', true, draggedPieceId));
+  $('body').append(buildPiece('w', true, draggedPieceId));
   draggedPieceEl = $('#' + draggedPieceId);
 
   // get the border size
