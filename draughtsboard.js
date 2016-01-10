@@ -19,7 +19,7 @@ function validMove(move) {
 
 function validSquare(square) {
   square = parseInt(square, 10)
-  return (square > 0 && square < 51)
+  return (square >= 0 && square < 51)
 }
 
 function validPieceCode(code) {
@@ -30,27 +30,36 @@ function validPieceCode(code) {
 // TODO: this whole function could probably be replaced with a single regex
 function validFen(fen) {
   if (typeof fen !== 'string') return false;
-
+  if (fen === 'W:W31-50:B1-20') return true;
+// console.trace('fen type stirng', fen);
   var FENPattern = /^(W|B):(W|B)((?:K?\d*)(?:,K?\d+)*?)(?::(W|B)((?:K?\d*)(?:,K?\d+)*?))?$/;
   var matches = FENPattern.exec(fen);
   if (matches != null) {
     var blackPieces = matches[1];
     var whitePieces = matches[2];
+    return true
   }
-  return true;
+  console.log('invalid fen returned', blackPieces, whitePieces);
+  return false;
 }
 
 function validPositionObject(pos) {
+  // console.log(typeof pos !== 'object',  'pos');
   if (typeof pos !== 'object') return false;
-
+// console.log(pos, 'iklk');
+  // pos = fenToObj(pos);
   for (var i in pos) {
     if (pos.hasOwnProperty(i) !== true) continue;
-
+    if (pos[i] == null) {
+      continue
+    }
+// console.log(i);
     if (validSquare(i) !== true || validPieceCode(pos[i]) !== true) {
+      // TODO console.trace('flsed in valid check', i,pos[i], validSquare(i), validPieceCode(pos[i]));
       return false;
     }
   }
-
+// console.log('valid pos');
   return true;
 }
 
@@ -67,20 +76,17 @@ function fenToPieceCode(piece) {
 
 // convert bP, wK, etc code to FEN structure
 function pieceCodeToFen(piece) {
-  var tmp = piece.split('');
-
-  // white piece
-  if (tmp[0] === 'w') {
-    return tmp[1].toUpperCase();
+  if (piece.indexOf('K') === -1) {
+    return piece;
+  } else {
+    return piece.replace('K', '');
   }
-
-  // black piece
-  return tmp[1].toLowerCase();
 }
 
 // convert FEN string to position object
 // returns false if the FEN string is invalid
 function fenToObj(fen) {
+  // console.trace(fen);
   if (validFen(fen) !== true) {
     return false;
   }
@@ -102,36 +108,20 @@ function fenToObj(fen) {
     var row = rows[i].substr(1);
     if (row.indexOf('-') !== -1) {
       row = row.split('-');
-      console.log(parseInt(row[1]), parseInt(row[0]));
+      // console.log(parseInt(row[1]), parseInt(row[0]));
       for (var j = parseInt(row[0]); j <= parseInt(row[1], 10); j++) {
         position[j] = color.toLowerCase();
-        // console.log(position);
+        // console.log(typeof j);
       }
     } else {
       row = row.split(',');
-      console.log(row);
+      // console.log(row, position);
       for (var j = 0; j < row.length; j++) {
-        console.log(position);
-        position[j] = row[j];
+        // console.log(typeof j);
+        position[row[j]] = color.toLowerCase();
       }
     }
-    console.log(rows[i], row, color, position);
-
-
-    // loop through each character in the FEN section
-    // for (var j = 0; j < row.length; j++) {
-    //   // number / empty squares
-    //   if (row[j].search(/[1-10]/) !== -1) {
-    //     var emptySquares = parseInt(row[j], 10);
-    //     colIndex += emptySquares;
-    //   }
-    //   // piece
-    //   else {
-    //     var square = COLUMNS[colIndex] + currentRow;
-    //     position[square] = fenToPieceCode(row[j]);
-    //     colIndex++;
-    //   }
-    // }
+    // console.trace(position);
 
     currentRow--;
   }
@@ -142,36 +132,37 @@ function fenToObj(fen) {
 // position object to FEN string
 // returns false if the obj is not a valid position object
 function objToFen(obj) {
+  // console.log(obj);
   if (validPositionObject(obj) !== true) {
     return false;
   }
 
-  var fen = '';
+  // var fen = '';
 
-  var currentRow = 10;
-  for (var i = 0; i < 10; i++) {
-    for (var j = 0; j < 10; j++) {
-      var square = COLUMNS[j] + currentRow;
-
-      // piece exists
-      if (obj.hasOwnProperty(square) === true) {
-        fen += pieceCodeToFen(obj[square]);
-      }
-
-      // empty space
-      else {
-        fen += '1';
-      }
+  var black = []
+  var white = []
+  // console.log(externalPosition, position);
+  for (var i = 0; i < obj.length; i++) {
+    switch (obj[i]) {
+      case 'w':
+        white.push(i)
+        break
+      case 'W':
+        white.push('K' + i)
+        break
+      case 'b':
+        black.push(i)
+        break
+      case 'B':
+        black.push(i)
+        break
+      default:
+        break
     }
-
-    if (i !== 9) {
-      fen += '/';
-    }
-
-    currentRow--;
   }
+  return 'w'.toUpperCase() + ':W' + white.join(',') + ':B' + black.join(',')
 
-  return fen;
+  // return fen;
 }
 
 window['DraughtsBoard'] = window['DraughtsBoard'] || function(containerElOrId, cfg) {
@@ -294,7 +285,7 @@ function error(code, msg, obj) {
   if (cfg.showErrors === 'console' &&
       typeof console === 'object' &&
       typeof console.log === 'function') {
-    console.log(errorText);
+    console.trace(errorText);
     if (arguments.length >= 2) {
       console.log(obj);
     }
@@ -390,6 +381,7 @@ function validAnimationSpeed(speed) {
 
 // validate config / set default options
 function expandConfig() {
+  // console.log(cfg.position);
   if (typeof cfg === 'string' || validPositionObject(cfg) === true) {
     cfg = {
       position: cfg
@@ -508,7 +500,7 @@ function calculateSquareSize() {
 // create random IDs for elements
 function createElIds() {
   // squares on the board
-  console.log(COLUMNS.length);
+  // console.log(COLUMNS.length);
   for (var i = 0; i <= 9; i++) {
     for (var j = 1; j <= 10; j++) {
       var square = (i * 10) + j;
@@ -1034,6 +1026,7 @@ function isXYOnSquare(x, y) {
     if (SQUARE_ELS_OFFSETS.hasOwnProperty(i) !== true) continue;
 
     var s = SQUARE_ELS_OFFSETS[i];
+    if (typeof s !== 'object') continue;
     if (x >= s.left && x < s.left + SQUARE_SIZE &&
         y >= s.top && y < s.top + SQUARE_SIZE) {
       return i;
@@ -1052,6 +1045,7 @@ function captureSquareOffsets() {
 
     SQUARE_ELS_OFFSETS[i] = $('#' + SQUARE_ELS_IDS[i]).offset();
   }
+  // console.log(SQUARE_ELS_OFFSETS, SQUARE_ELS_IDS);
 }
 
 function removeSquareHighlights() {
@@ -1381,6 +1375,7 @@ widget.orientation = function(arg) {
 };
 
 widget.position = function(position, useAnimation) {
+  // console.trace(position);
   // no arguments, return the current position
   if (arguments.length === 0) {
     return deepCopy(CURRENT_POSITION);
