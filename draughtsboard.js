@@ -18,6 +18,9 @@ function validMove(move) {
 }
 
 function validSquare(square) {
+  if (square && square.substr(0, 1) === 'K') {
+    square = square.substr(1)
+  }
   square = parseInt(square, 10)
   return (square >= 0 && square < 51)
 }
@@ -117,8 +120,12 @@ function fenToObj(fen) {
       row = row.split(',');
       // console.log(row, position);
       for (var j = 0; j < row.length; j++) {
-        // console.log(typeof j);
-        position[row[j]] = color.toLowerCase();
+        console.log(row[j]);
+        if (row[j].substr(0, 1) === 'K') {
+          position[row[j].substr(1)] = color.toUpperCase()
+        } else {
+          position[row[j]] = color.toLowerCase()
+        }
       }
     }
     // console.trace(position);
@@ -1399,6 +1406,7 @@ widget.position = function(position, useAnimation) {
   // convert FEN to position object
   if (validFen(position) === true) {
     position = fenToObj(position);
+    // console.log(position);
   }
 
   // validate position object
