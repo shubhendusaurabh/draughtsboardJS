@@ -974,8 +974,9 @@ function drawPositionInstant() {
   boardEl.find('.' + CSS.piece).remove();
 
   // add the pieces
-  // console.log(CURRENT_POSITION.length, SQUARE_ELS_IDS);
+  // console.log(CURRENT_POSITION, CSS.piece);
   for (var i in CURRENT_POSITION) {
+    // console.log(CURRENT_POSITION[i]);
     if (CURRENT_POSITION.hasOwnProperty(i) !== true) continue;
     if (CURRENT_POSITION[i] !== null)
       $('#' + SQUARE_ELS_IDS[i]).append(buildPiece(CURRENT_POSITION[i]));
@@ -1022,14 +1023,19 @@ function setCurrentPosition(position) {
   var newPos = deepCopy(position);
   var oldFen = objToFen(oldPos);
   var newFen = objToFen(newPos);
-
+// console.log(oldFen, newFen);
+// console.log(oldPos, newPos);
   // do nothing if no change in position
-  if (oldFen === newFen) return;
-
+  if (oldFen === newFen) {
+    // console.log(oldFen, newFen);
+    return false;
+  };
+// console.trace(cfg);
   // run their onChange function
   if (cfg.hasOwnProperty('onChange') === true &&
     typeof cfg.onChange === 'function') {
     cfg.onChange(oldPos, newPos);
+    // console.log(cfg);
   }
 
   // update state
@@ -1430,6 +1436,7 @@ widget.position = function(position, useAnimation) {
 
     // set the new position
     setCurrentPosition(position);
+    drawPositionInstant();
   }
   // instant update
   else {
