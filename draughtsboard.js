@@ -120,7 +120,7 @@ function fenToObj(fen) {
       row = row.split(',');
       // console.log(row, position);
       for (var j = 0; j < row.length; j++) {
-        console.log(row[j]);
+        // console.log(row[j]);
         if (row[j].substr(0, 1) === 'K') {
           position[row[j].substr(1)] = color.toUpperCase()
         } else {
@@ -631,6 +631,11 @@ function buildBoard(orientation) {
 }
 
 function buildPieceImgSrc(piece) {
+  // console.trace(piece === null);
+  // For handling case insensetive windows :(
+  if (piece === 'W' || piece === 'B') {
+    piece = 'K' + piece;
+  }
   if (typeof cfg.pieceTheme === 'function') {
     return cfg.pieceTheme(piece);
   }
@@ -645,7 +650,10 @@ function buildPieceImgSrc(piece) {
 }
 
 function buildPiece(piece, hidden, id) {
-  // console.trace('building pejd');
+  // console.trace('building pejd', piece, hidden, id);
+  if (!piece) {
+    return false;
+  }
   var html = '<img src="' + buildPieceImgSrc(piece) + '" ';
   if (id && typeof id === 'string') {
     html += 'id="' + id + '" ';
