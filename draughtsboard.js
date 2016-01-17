@@ -587,11 +587,11 @@ function buildBoard(orientation) {
       // console.log(i%2==0, j, row, square%2==0);
       if (squareColor == 'white') {
         html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
-          'square-' + square + '" ' +
+          'square-empty' + '" ' +
           'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px">';
       } else {
         html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
-          'square-' + square + '" ' +
+          'square-' + Math.round(square/2) + '" ' +
           'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px" ' +
           'id="' + SQUARE_ELS_IDS[Math.round(square/2)] + '" ' +
           'data-square="' + Math.round(square/2) + '">';
