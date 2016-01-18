@@ -5,7 +5,13 @@
 // Chess Util Functions
 //------------------------------------------------------------------------------
 var COLUMNS = '0123456789'.split('');
-
+var UNICODES = {
+  'w': '\u26C0',
+  'b': '\u26C2',
+  'B': '\u26C1',
+  'W': '\u26C3',
+  '0': '  '
+}
 function validMove(move) {
   // move should be a string
   if (typeof move !== 'string') return false;
@@ -161,7 +167,7 @@ function objToFen(obj) {
         black.push(i)
         break
       case 'B':
-        black.push(i)
+        black.push('K' + i)
         break
       default:
         break
@@ -654,6 +660,20 @@ function buildPiece(piece, hidden, id) {
   if (!piece) {
     return false;
   }
+  if (cfg.pieceTheme === 'unicode') {
+    var html = '<span ';
+    if (id && typeof id === 'string') {
+      html += 'id="' + id + '" ';
+    }
+    html += 'class="unicode ' + piece + ' ' + CSS.piece + '" ';
+    html += 'data-piece="' + piece + '" ';
+    html += 'style="font-size: ' + SQUARE_SIZE + 'px;';
+    if (hidden === true) {
+      html += 'display:none;';
+    }
+    html += '">' + UNICODES[piece] + '</span>';
+    return html;
+  }
   var html = '<img src="' + buildPieceImgSrc(piece) + '" ';
   if (id && typeof id === 'string') {
     html += 'id="' + id + '" ';
@@ -976,7 +996,7 @@ function drawPositionInstant() {
   // add the pieces
   // console.log(CURRENT_POSITION, CSS.piece);
   for (var i in CURRENT_POSITION) {
-    // console.log(CURRENT_POSITION[i]);
+    // console.log(buildPiece(CURRENT_POSITION[i]));
     if (CURRENT_POSITION.hasOwnProperty(i) !== true) continue;
     if (CURRENT_POSITION[i] !== null)
       $('#' + SQUARE_ELS_IDS[i]).append(buildPiece(CURRENT_POSITION[i]));
