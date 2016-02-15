@@ -589,7 +589,12 @@ function buildBoard(orientation) {
   for (var i = 0; i < 10; i++) {
     html += '<div class="' + CSS.row + '">';
     for (var j = 1; j <= 10; j++) {
-      var square = (parseInt(alpha[i], 10) * 10) + j;
+      var square;
+      if (orientation === 'black') {
+        square = (parseInt(alpha[i], 10) * 10) + (11 - j);
+      } else {
+        square = (parseInt(alpha[i], 10) * 10) + j;
+      }
       // console.log(i%2==0, j, row, square%2==0);
       if (squareColor == 'white') {
         html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
