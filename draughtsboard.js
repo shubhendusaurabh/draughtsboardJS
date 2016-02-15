@@ -1,4 +1,4 @@
-;(function () {
+(function () {
   'use strict'
 
   var COLUMNS = '0123456789'.split('')
@@ -240,8 +240,8 @@
     var SQUARE_ELS_OFFSETS
 
     // ------------------------------------------------------------------------------
-      // JS Util Functions
-      // ------------------------------------------------------------------------------
+    // JS Util Functions
+    // ------------------------------------------------------------------------------
 
     // http://tinyurl.com/3ttloxj
     function uuid () {
@@ -718,7 +718,8 @@
         display: '',
         position: 'absolute',
         top: srcSquarePosition.top,
-        left: srcSquarePosition.left
+        left: srcSquarePosition.left,
+        fontSize: SQUARE_SIZE + 'px'
       })
 
       // remove original piece from source square
@@ -759,7 +760,8 @@
         display: '',
         position: 'absolute',
         left: srcOffset.left,
-        top: srcOffset.top
+        top: srcOffset.top,
+        fontSize: SQUARE_SIZE + 'px'
       })
 
       // on complete
@@ -1187,7 +1189,6 @@
           deepCopy(CURRENT_POSITION), CURRENT_ORIENTATION) === false) {
         return
       }
-
       // set state
       DRAGGING_A_PIECE = true
       DRAGGED_PIECE = piece
@@ -1204,12 +1205,19 @@
       captureSquareOffsets()
 
       // create the dragged piece
-      draggedPieceEl.attr('src', buildPieceImgSrc(piece))
+      if (cfg.pieceTheme === 'unicode') {
+        draggedPieceEl.text(UNICODES[piece])
+        draggedPieceEl.attr('class', '').addClass(piece).addClass('unicode')
+      } else {
+        draggedPieceEl.attr('src', buildPieceImgSrc(piece))
+      }
+      draggedPieceEl
         .css({
           display: '',
           position: 'absolute',
           left: x - (SQUARE_SIZE / 2),
-          top: y - (SQUARE_SIZE / 2)
+          top: y - (SQUARE_SIZE / 2),
+          fontSize: SQUARE_SIZE + 'px'
         })
 
       if (source !== 'spare') {
