@@ -1,6 +1,7 @@
 (function () {
   'use strict'
 
+  var SIZE
   var COLUMNS = '0123456789'.split('')
   var UNICODES = {
     'w': '\u26C0',
@@ -9,6 +10,7 @@
     'W': '\u26C3',
     '0': '  '
   }
+  var START_FEN
   function validMove (move) {
     // move should be a string
     if (typeof move !== 'string') return false
@@ -36,7 +38,7 @@
   // TODO: this whole function could probably be replaced with a single regex
   function validFen (fen) {
     if (typeof fen !== 'string') return false
-    if (fen === 'W:W31-50:B1-20') return true
+    if (fen === START_FEN) return true
     // console.trace('fen type stirng', fen)
     var FENPattern = /^(W|B):(W|B)((?:K?\d*)(?:,K?\d+)*?)(?::(W|B)((?:K?\d*)(?:,K?\d+)*?))?$/
     var matches = FENPattern.exec(fen)
@@ -175,15 +177,21 @@
   // return fen
   }
 
-  window['DraughtsBoard'] = window['DraughtsBoard'] || function (containerElOrId, cfg) {
+  window['DraughtsBoard'] = window['DraughtsBoard'] || function (containerElOrId, cfg, board) {
     cfg = cfg || {}
-
+    board = board || 'draughts'
     // ------------------------------------------------------------------------------
     // Constants
     // ------------------------------------------------------------------------------
 
     var MINIMUM_JQUERY_VERSION = '1.7.0'
-    var START_FEN = 'W:W31-50:B1-20'
+    if (board == 'checkers') {
+      START_FEN = 'W:W21-32:B1-12'
+      SIZE = 8
+    } else {
+      START_FEN = 'W:W31-50:B1-20'
+      SIZE = 10
+    }
     var START_POSITION = fenToObj(START_FEN)
 
     // use unique class names to prevent clashing with anything else on the page
@@ -478,7 +486,7 @@
     // calculates square size based on the width of the container
     // got a little CSS black magic here, so let me explain:
     // get the width of the container element (could be anything), reduce by 1 for
-    // fudge factor, and then keep reducing until we find an exact mod 10 for
+    // fudge factor, and then keep reducing until we find an exact mod SIZE for
     // our square size
     function calculateSquareSize () {
       var containerWidth = parseInt(containerEl.width(), 10)
@@ -491,20 +499,20 @@
       // pad one pixel
       var boardWidth = containerWidth - 1
 
-      while (boardWidth % 10 !== 0 && boardWidth > 0) {
+      while (boardWidth % SIZE !== 0 && boardWidth > 0) {
         boardWidth--
       }
 
-      return (boardWidth / 10)
+      return (boardWidth / SIZE)
     }
 
     // create random IDs for elements
     function createElIds () {
       // squares on the board
       // console.log(COLUMNS.length)
-      for (var i = 0; i <= 9; i++) {
-        for (var j = 1; j <= 10; j++) {
-          var square = (i * 10) + j
+      for (var i = 0; i <= (SIZE - 1); i++) {
+        for (var j = 1; j <= SIZE; j++) {
+          var square = (i * SIZE) + j
           // console.log(parseInt(COLUMNS[i], 10) + j)
           SQUARE_ELS_IDS[square] = square + '-' + uuid()
         }
@@ -567,21 +575,21 @@
 
       // algebraic notation / orientation
       var alpha = deepCopy(COLUMNS)
-      var row = 10
+      var row = SIZE
       if (orientation === 'black') {
         alpha.reverse()
         row = 1
       }
 
       var squareColor = 'white'
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < SIZE; i++) {
         html += '<div class="' + CSS.row + '">'
-        for (var j = 1; j <= 10; j++) {
+        for (var j = 1; j <= SIZE; j++) {
           var square
           if (orientation === 'black') {
-            square = (parseInt(alpha[i], 10) * 10) + (11 - j)
+            square = (parseInt(alpha[i], 10) * 10) + ((SIZE + 1) - j)
           } else {
-            square = (parseInt(alpha[i], 10) * 10) + j
+            square = (parseInt(alpha[i], 10) * SIZE) + j
           }
           // console.log(i%2==0, j, row, square%2==0)
           if (squareColor === 'white') {
@@ -862,8 +870,8 @@
       var squares = []
 
       // calculate distance of all squares
-      for (var i = 0; i < 10; i++) {
-        for (var j = 0; j < 10; j++) {
+      for (var i = 0; i < SIZE; i++) {
+        for (var j = 0; j < SIZE; j++) {
           var s = COLUMNS[i] + (j + 1)
 
           // skip the square we're starting from
@@ -1469,7 +1477,7 @@
       SQUARE_SIZE = calculateSquareSize()
 
       // set board width
-      boardEl.css('width', (SQUARE_SIZE * 10) + 'px')
+      boardEl.css('width', (SQUARE_SIZE * SIZE) + 'px')
 
       // set drag piece size
       draggedPieceEl.css({
