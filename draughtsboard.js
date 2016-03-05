@@ -2,7 +2,7 @@
   'use strict'
 
   var SIZE
-  var COLUMNS = '0123456789'.split('')
+  var COLUMNS
   var UNICODES = {
     'w': '\u26C0',
     'b': '\u26C2',
@@ -39,62 +39,33 @@
   function validFen (fen) {
     if (typeof fen !== 'string') return false
     if (fen === START_FEN) return true
-    // console.trace('fen type stirng', fen)
     var FENPattern = /^(W|B):(W|B)((?:K?\d*)(?:,K?\d+)*?)(?::(W|B)((?:K?\d*)(?:,K?\d+)*?))?$/
     var matches = FENPattern.exec(fen)
     if (matches != null) {
-      var blackPieces = matches[1]
-      var whitePieces = matches[2]
       return true
     }
-    console.log('invalid fen returned', blackPieces, whitePieces)
     return false
   }
 
   function validPositionObject (pos) {
-    // console.log(typeof pos !== 'object',  'pos')
     if (typeof pos !== 'object') return false
-    // console.log(pos, 'iklk')
     // pos = fenToObj(pos)
     for (var i in pos) {
       if (pos.hasOwnProperty(i) !== true) continue
       if (pos[i] == null) {
         continue
       }
-      // console.log(i)
       if (validSquare(i) !== true || validPieceCode(pos[i]) !== true) {
         // TODO console.trace('flsed in valid check', i,pos[i], validSquare(i), validPieceCode(pos[i]))
         return false
       }
     }
-    // console.log('valid pos')
     return true
   }
-
-  // convert FEN piece code to bP, wK, etc
-  // function fenToPieceCode (piece) {
-  //   // black piece
-  //   if (piece.toLowerCase() === piece) {
-  //     return 'b' + piece.toUpperCase()
-  //   }
-  //
-  //   // white piece
-  //   return 'w' + piece.toUpperCase()
-  // }
-
-  // convert bP, wK, etc code to FEN structure
-  // function pieceCodeToFen (piece) {
-  //   if (piece.indexOf('K') === -1) {
-  //     return piece
-  //   } else {
-  //     return piece.replace('K', '')
-  //   }
-  // }
 
   // convert FEN string to position object
   // returns false if the FEN string is invalid
   function fenToObj (fen) {
-    // console.trace(fen)
     if (validFen(fen) !== true) {
       return false
     }
@@ -116,16 +87,12 @@
       var j
       if (row.indexOf('-') !== -1) {
         row = row.split('-')
-        // console.log(parseInt(row[1]), parseInt(row[0]))
         for (j = parseInt(row[0], 10); j <= parseInt(row[1], 10); j++) {
           position[j] = color.toLowerCase()
-        // console.log(typeof j)
         }
       } else {
         row = row.split(',')
-        // console.log(row, position)
         for (j = 0; j < row.length; j++) {
-          // console.log(row[j])
           if (row[j].substr(0, 1) === 'K') {
             position[row[j].substr(1)] = color.toUpperCase()
           } else {
@@ -133,8 +100,6 @@
           }
         }
       }
-      // console.trace(position)
-
       currentRow--
     }
 
@@ -144,16 +109,11 @@
   // position object to FEN string
   // returns false if the obj is not a valid position object
   function objToFen (obj) {
-    // console.log(obj)
     if (validPositionObject(obj) !== true) {
       return false
     }
-
-    // var fen = ''
-
     var black = []
     var white = []
-    // console.log(externalPosition, position)
     for (var i = 0; i < obj.length; i++) {
       switch (obj[i]) {
         case 'w':
@@ -185,12 +145,14 @@
     // ------------------------------------------------------------------------------
 
     var MINIMUM_JQUERY_VERSION = '1.7.0'
-    if (board == 'checkers') {
+    if (board === 'checkers') {
       START_FEN = 'W:W21-32:B1-12'
       SIZE = 8
+      COLUMNS = '01234567'.split('')
     } else {
       START_FEN = 'W:W31-50:B1-20'
       SIZE = 10
+      COLUMNS = '0123456789'.split('')
     }
     var START_POSITION = fenToObj(START_FEN)
 
@@ -396,7 +358,6 @@
 
     // validate config / set default options
     function expandConfig () {
-      // console.log(cfg.position)
       if (typeof cfg === 'string' || validPositionObject(cfg) === true) {
         cfg = {
           position: cfg
@@ -509,15 +470,12 @@
     // create random IDs for elements
     function createElIds () {
       // squares on the board
-      // console.log(COLUMNS.length)
       for (var i = 0; i <= (SIZE - 1); i++) {
         for (var j = 1; j <= SIZE; j++) {
           var square = (i * SIZE) + j
-          // console.log(parseInt(COLUMNS[i], 10) + j)
           SQUARE_ELS_IDS[square] = square + '-' + uuid()
         }
       }
-      // console.log(SQUARE_ELS_IDS)
 
       // spare pieces
       var pieces = 'bBwW'.split('')
@@ -587,31 +545,25 @@
         for (var j = 1; j <= SIZE; j++) {
           var square
           if (orientation === 'black') {
-            square = (parseInt(alpha[i], 10) * 10) + ((SIZE + 1) - j)
+            square = (parseInt(alpha[i], 10) * SIZE) + ((SIZE + 1) - j)
           } else {
             square = (parseInt(alpha[i], 10) * SIZE) + j
           }
-          // console.log(i%2==0, j, row, square%2==0)
+          square = Math.round(square / 2)
           if (squareColor === 'white') {
             html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
               'square-empty' + '" ' +
               'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px">'
           } else {
             html += '<div class="' + CSS.square + ' ' + CSS[squareColor] + ' ' +
-              'square-' + Math.round(square / 2) + '" ' +
+              'square-' + square + '" ' +
               'style="width: ' + SQUARE_SIZE + 'px; height: ' + SQUARE_SIZE + 'px" ' +
-              'id="' + SQUARE_ELS_IDS[Math.round(square / 2)] + '" ' +
-              'data-square="' + Math.round(square / 2) + '">'
+              'id="' + SQUARE_ELS_IDS[square] + '" ' +
+              'data-square="' + square + '">'
 
             if (cfg.showNotation === true) {
-              // alpha notation
-              // if ((orientation === 'white' && row === 1) ||
-              // (orientation === 'black' && row === 10)) {
               html += '<div class="' + CSS.notation + ' ' + CSS.alpha + '">' +
-                Math.round(square / 2) + '</div>'
-              // }
-              // console.log(square/2, i, j)
-              // numeric notation
+                square + '</div>'
               if (j === 0) {
                 html += '<div class="' + CSS.notation + ' ' + CSS.numeric + '">' +
                   row + '</div>'
@@ -619,7 +571,6 @@
             }
           }
           html += '</div>' // end .square
-          // console.log(html)
           squareColor = (squareColor === 'white' ? 'black' : 'white')
         }
         html += '<div class="' + CSS.clearfix + '"></div></div>'
@@ -637,7 +588,6 @@
     }
 
     function buildPieceImgSrc (piece) {
-      // console.trace(piece === null)
       // For handling case insensetive windows :(
       if (piece === 'W' || piece === 'B') {
         piece = 'K' + piece
@@ -656,7 +606,6 @@
     }
 
     function buildPiece (piece, hidden, id) {
-      // console.trace('building pejd', piece, hidden, id)
       if (!piece) {
         return false
       }
@@ -997,9 +946,7 @@
       boardEl.find('.' + CSS.piece).remove()
 
       // add the pieces
-      // console.log(CURRENT_POSITION, CSS.piece)
       for (var i in CURRENT_POSITION) {
-        // console.log(buildPiece(CURRENT_POSITION[i]))
         if (CURRENT_POSITION.hasOwnProperty(i) !== true) {
           continue
         }
@@ -1048,19 +995,14 @@
       var newPos = deepCopy(position)
       var oldFen = objToFen(oldPos)
       var newFen = objToFen(newPos)
-      // console.log(oldFen, newFen)
-      // console.log(oldPos, newPos)
       // do nothing if no change in position
       if (oldFen === newFen) {
-        // console.log(oldFen, newFen)
         return false
       }
-      // console.trace(cfg)
       // run their onChange function
       if (cfg.hasOwnProperty('onChange') === true &&
         typeof cfg.onChange === 'function') {
         cfg.onChange(oldPos, newPos)
-      // console.log(cfg)
       }
 
       // update state
@@ -1091,7 +1033,6 @@
 
         SQUARE_ELS_OFFSETS[i] = $('#' + SQUARE_ELS_IDS[i]).offset()
       }
-    // console.log(SQUARE_ELS_OFFSETS, SQUARE_ELS_IDS)
     }
 
     function removeSquareHighlights () {
@@ -1424,7 +1365,6 @@
     }
 
     widget.position = function (position, useAnimation) {
-      // console.trace(position)
       // no arguments, return the current position
       if (arguments.length === 0) {
         return deepCopy(CURRENT_POSITION)
@@ -1448,7 +1388,6 @@
       // convert FEN to position object
       if (validFen(position) === true) {
         position = fenToObj(position)
-      // console.log(position)
       }
 
       // validate position object
