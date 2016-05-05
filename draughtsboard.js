@@ -6,8 +6,8 @@
   var UNICODES = {
     'w': '\u26C0',
     'b': '\u26C2',
-    'B': '\u26C1',
-    'W': '\u26C3',
+    'B': '\u26C3',
+    'W': '\u26C1',
     '0': '  '
   }
   var START_FEN

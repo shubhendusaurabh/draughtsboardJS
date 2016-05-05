@@ -1,0 +1,25 @@
+{
+  "name": "draughtsboard.js",
+  "version": "0.1.0",
+  "description": "draughtsboard, checkersboard implementation in javascript",
+  "main": "draughtsboard.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shubhendusaurabh/draughtsboardJS.git"
+  },
+  "keywords": [
+    "draughts",
+    "checkers",
+    "draughtsboard",
+    "checkersboard"
+  ],
+  "author": "shubhendu",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/shubhendusaurabh/draughtsboardJS/issues"
+  },
+  "homepage": "https://github.com/shubhendusaurabh/draughtsboardJS#readme"
+}
