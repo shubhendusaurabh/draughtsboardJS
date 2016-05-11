@@ -1,5 +1,5 @@
 {
-  "name": "draughtsboard.js",
+  "name": "draughtsboard",
   "version": "0.1.0",
   "description": "draughtsboard, checkersboard implementation in javascript",
   "main": "draughtsboard.js",
@@ -16,7 +16,7 @@
     "draughtsboard",
     "checkersboard"
   ],
-  "author": "shubhendu",
+  "author": "shubhu",
   "license": "MPL-2.0",
   "bugs": {
     "url": "https://github.com/shubhendusaurabh/draughtsboardJS/issues"
