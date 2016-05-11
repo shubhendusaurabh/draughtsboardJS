@@ -1,6 +1,6 @@
 {
   "name": "draughtsboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "draughtsboard, checkersboard implementation in javascript",
   "main": "draughtsboard.js",
   "scripts": {
