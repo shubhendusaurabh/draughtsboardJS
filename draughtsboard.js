@@ -1682,4 +1682,14 @@
   // expose util functions
   window.DraughtsBoard.fenToObj = fenToObj
   window.DraughtsBoard.objToFen = objToFen
+
+  if (typeof exports !== 'undefined') {
+    exports.DraughtsBoard = DraughtsBoard
+  }
+
+  if (typeof define !== 'undefined') {
+    define(function () {
+      return DraughtsBoard
+    })
+  }
 })()
