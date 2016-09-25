@@ -61,19 +61,19 @@ trashSpeed | Number or 'slow' or 'fast' | no | 100 | Animation speed for when pi
 
 ### Methods
 
-Method | Args | Description | Example
---- | --- | --- | ---
-clear(useAnimation) | useAnimation - false | Removes all the pieces on the board. If useAnimation is false, removes pieces instantly. | 
-destroy() | none | Remove the widget from the DOM. | 
-fen() | none | Returns the current position as a FEN string. | 
-flip() | none | Flips the board orientation. | 
-move(move1, move2, etc) | moveN - '35-31', '19-23' | Executes one or more moves on the board. Returns an updated Position Object of the board including the move(s). |
-position(fen) | fen - 'fen' (optional) | fen - 'fen' (optional) |
-position(newPosition, useAnimation) | newPosition - Position Object, FEN string, or 'start' | Animates to a new position. |
-orientation() | none | Returns the current orientation of the board. |
-orientation(side) | side - 'white', 'black', or 'flip' | If 'white' or 'black', sets the orientation of the board accordingly. If 'flip', flips the orientation. |
-resize() | none | Recalculates board and square sizes based on the parent element and redraws the board accordingly. |
-start(useAnimation) | useAnimation - false (optional) | Sets the board to the start position. |
+Method | Args | Description
+--- | --- | ---
+clear(useAnimation) | useAnimation - false | Removes all the pieces on the board. If useAnimation is false, removes pieces instantly.
+destroy() | none | Remove the widget from the DOM.
+fen() | none | Returns the current position as a FEN string.
+flip() | none | Flips the board orientation.
+move(move1, move2, etc) | moveN - '35-31', '19-23' | Executes one or more moves on the board. Returns an updated Position Object of the board including the move(s).
+position(fen) | fen - 'fen' (optional) | fen - 'fen' (optional)
+position(newPosition, useAnimation) | newPosition - Position Object, FEN string, or 'start' | Animates to a new position.
+orientation() | none | Returns the current orientation of the board.
+orientation(side) | side - 'white', 'black', or 'flip' | If 'white' or 'black', sets the orientation of the board accordingly. If 'flip', flips the orientation.
+resize() | none | Recalculates board and square sizes based on the parent element and redraws the board accordingly.
+start(useAnimation) | useAnimation - false (optional) | Sets the board to the start position.
 
 Sites using draughtsboard
 --------------------------------------
