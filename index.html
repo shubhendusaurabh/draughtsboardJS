@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8">
-    <link href="//rawgit.com/shubhendusaurabh/draughtsboardJS/master/draughtsboard.css" rel="stylesheet"/>
+    <link href="//rawgit.com/shubhendusaurabh/draughtsboardJS/master/draughtsboard.css" rel="stylesheet" />
     <title>Draughtsboard</title>
-  </head>
-  <body>
-    <h2>Draughts board</h2>
-    <div id="board" style="width: 600px; height: 600px"></div>
-    <textarea id="pdn">
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <h2 style="text-align: center;">Draughts board</h2>
+    <div id="board" style="width: 400px; height: 400px; margin: 0 auto;"></div>
+    <div style="text-align:center">
+        <p>PDN Example</p>
+        <textarea id="pdn">
 [Event "18th Computer Olympiad, 10x10 Draughts"]
 [Site "Leiden, NLD"]
 [Date "2015.07.04"]
@@ -32,12 +39,14 @@
 13-18 61. 7-2 23-29 62. 2-13 29x27 63. 13x47 4-10 64. 24-19 10-15 65. 47-24
 1-0
     </textarea>
+    <p>FEN examples</p>
     <textarea id="fen">
 W:W13,K22,25,33,35,44,K45,46:B1,2,3,6,9,10,12,14,16,20,21,K49
     </textarea>
     <textarea id="fen2">
 W:W13,K22,25,32:B1,2,3,6,K9,12,11
     </textarea>
+    </div>
     <script src="//code.jquery.com/jquery-2.2.1.min.js"></script>
     <script src="//rawgit.com/shubhendusaurabh/draughts.js/master/draughts.js"></script>
     <script src="//rawgit.com/shubhendusaurabh/draughtsboardJS/master/draughtsboard.js"></script>
@@ -108,12 +117,11 @@ var onDrop = function(source, target) {
     from: source,
     to: target
   });
-// console.log(move, source, target);
+
   if (move === null) {
     return 'snapback';
   }
-//   console.log(move);
-  // socket.emit('move', {from: source, to: target, promotion: 'q'});
+
   // remove black highlights
   removeHighlights('black');
   boardEl.find('.square-' + move.from).addClass('highlight-black');
@@ -189,5 +197,6 @@ var initialConfig = {
 
 board = DraughtsBoard('board', initialConfig);
     </script>
-  </body>
+</body>
+
 </html>
