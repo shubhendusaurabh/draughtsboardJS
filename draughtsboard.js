@@ -395,11 +395,11 @@
         cfg.draggable = true
       }
 
-      // default piece theme is wikipedia
+      // default piece theme is unicode
       if (cfg.hasOwnProperty('pieceTheme') !== true ||
         (typeof cfg.pieceTheme !== 'string' &&
         typeof cfg.pieceTheme !== 'function')) {
-        cfg.pieceTheme = 'img/draughtspieces/wikipedia/{piece}.png'
+        cfg.pieceTheme = 'unicode'
       }
 
       // animation speeds
