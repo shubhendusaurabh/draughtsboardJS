@@ -1,6 +1,9 @@
 draughtsboard - JavaScript Draughts Board
 ==================================================
 
+This library has been inspired from [ChessboardJS](https://github.com/oakmac/chessboardjs/). It uses similar methods & configuration options. You can also read up [chessboardjs documentation](https://chessboardjs.com/docs) for more usage example.
+
+
 What is draughtsboard?
 --------------------------------------
 
@@ -24,14 +27,63 @@ Here is a list of things that draughtsboard is **not**:
 
 draughtsboard is designed to work well with any of those things, but the idea behind draughtsboard is that the logic that controls the board should be independent of those other problems.
 
+See [draughts.js](https://github.com/shubhendusaurabh/draughts.js) library for parsing & validation.
+
 Installation
 --------------------------------------
+Include `draughtsboard.js` & `draughtsboard.css` files in your html.
+Required: jQuery
 ```
-npm install draughtsboard
+<script src="/js/draughtsboard.js"></script>
+<link href="/css/draughtsboard.css" rel="stylesheet" />
 ```
 
 Docs and Examples
 --------------------------------------
+
+## Example Usage
+
+```html
+<div id="board" style="width: 500px"></div>
+```
+```js
+function onSnapEnd() {
+    board.position(game.fen())
+}
+function onMouseoutSquare(square, piece) {
+    // code
+}
+function onMouseoverSquare(square, piece) {
+    // get list of possible moves for this square
+    var moves = game.getLegalMoves(square)
+    // rest of the coe
+}
+function onDrop(source, target) {
+    // see if the move is legal
+    var move = game.move({
+        from: source,
+        to: target,
+    })
+    // illegal move
+    if (move === null) return 'snapback'
+}
+function onDragStart(source, piece, position, orientation) {
+    // do not pick up pieces if the game is over
+    if (game.gameOver()) return false
+}
+const config = {
+    draggable: true,
+    position: 'start',
+    onDragStart: onDragStart,
+    onDrop: onDrop,
+    onSnapEnd: onSnapEnd,
+    onMouseoutSquare: onMouseoutSquare,
+    onMouseoverSquare: onMouseoverSquare,
+    pieceTheme: 'unicode'
+}
+board = DraughtsBoard('board', config)
+```
+
 ### Config
 
 Property | Type | Required | Default | Description
@@ -52,7 +104,7 @@ orientation | 'white' or 'black' | no | 'white' | If provided, sets the initial 
 showNotation | Boolean | no | true | Turn board notation on or off.
 sparePieces | Boolean | no | false | If true, the board will have spare pieces that can be dropped onto the board.
 showErrors | false or String or Function | no | n/a | showErrors is an optional parameter to control how ChessBoard reports errors.
-pieceTheme | String or Function | no | 'unicode' | A template string used to determine the source of piece images.
+pieceTheme | String or Function | no | 'unicode' | A template string (img/draughtspieces/{piece}.png e.g. img/draughtspieces/w.png) used to determine the source of piece images.
 appearSpeed | Number or 'slow' or 'fast' | no | 200 | Animation speed for when pieces appear on a square.
 moveSpeed | Number or 'slow' or 'fast' | no | 200 | Animation speed for when pieces move between squares or from spare pieces to the board.
 snapbackSpeed | Number or 'slow' or 'fast' | no | 50 | Animation speed for when pieces that were dropped outside the board return to their original square.
@@ -78,8 +130,7 @@ start(useAnimation) | useAnimation - false (optional) | Sets the board to the st
 Sites using draughtsboard
 --------------------------------------
 
-- [Shelr Games](http://www.shelr.com)
-- [draughtsboard in action](https://shubhendusaurabh.github.io/draughtsboard)
+- [draughtsboard in action](https://www.shubhu.in/checkers-online/)
 
 License
 --------------------------------------
