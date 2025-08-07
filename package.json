@@ -4,7 +4,9 @@
   "description": "draughtsboard, checkersboard implementation in javascript",
   "main": "draughtsboard.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "open test.html || xdg-open test.html || start test.html",
+    "test:server": "python3 -m http.server 8080 || python -m SimpleHTTPServer 8080",
+    "test:node": "echo \"Node.js testing not configured - use browser tests\" && exit 1"
   },
   "repository": {
     "type": "git",
