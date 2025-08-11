@@ -47,13 +47,13 @@ describe('Position and FEN Handling', function() {
             };
             
             const result = board.position(newPosition);
-            expect(result).to.be.an('array');
+            expect(result).to.be.an('object');
             
             const currentPosition = board.position();
-            expect(currentPosition[5]).to.equal('w');
-            expect(currentPosition[6]).to.equal('W');
-            expect(currentPosition[45]).to.equal('b');
-            expect(currentPosition[46]).to.equal('B');
+            expect(currentPosition['5']).to.equal('w');
+            expect(currentPosition['6']).to.equal('W');
+            expect(currentPosition['45']).to.equal('b');
+            expect(currentPosition['46']).to.equal('B');
             
             $container.data('board', board);
         });
@@ -66,14 +66,14 @@ describe('Position and FEN Handling', function() {
             board.position(fen);
             
             const currentPosition = board.position();
-            expect(currentPosition).to.be.an('array');
+            expect(currentPosition).to.be.an('object');
             
             // Check some positions
-            expect(currentPosition[31]).to.equal('w');
-            expect(currentPosition[50]).to.equal('w');
-            expect(currentPosition[1]).to.equal('b');
-            expect(currentPosition[20]).to.equal('b');
-            expect(currentPosition[25]).to.be.undefined; // Empty square
+            expect(currentPosition['31']).to.equal('w');
+            expect(currentPosition['50']).to.equal('w');
+            expect(currentPosition['1']).to.equal('b');
+            expect(currentPosition['20']).to.equal('b');
+            expect(currentPosition['25']).to.be.undefined; // Empty square
             
             $container.data('board', board);
         });
@@ -85,7 +85,7 @@ describe('Position and FEN Handling', function() {
             board.position('start');
             
             const currentPosition = board.position();
-            expect(currentPosition).to.be.an('array');
+            expect(currentPosition).to.be.an('object');
             const pieceCount = Object.keys(currentPosition).filter(key => currentPosition[key]).length;
             expect(pieceCount).to.be.greaterThan(0);
             
@@ -135,8 +135,8 @@ describe('Position and FEN Handling', function() {
             board.position(newPosition, false);
             
             const currentPosition = board.position();
-            expect(currentPosition[5]).to.equal('w');
-            expect(currentPosition[45]).to.equal('b');
+            expect(currentPosition['5']).to.equal('w');
+            expect(currentPosition['45']).to.equal('b');
             
             $container.data('board', board);
         });

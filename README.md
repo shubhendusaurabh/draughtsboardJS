@@ -1,13 +1,23 @@
-draughtsboard - JavaScript Draughts Board
-==================================================
+# draughtsboard - JavaScript Draughts Board
 
-This library has been inspired from [ChessboardJS](https://github.com/oakmac/chessboardjs/). It uses similar methods & configuration options. You can also read up [chessboardjs documentation](https://chessboardjs.com/docs) for more usage example.
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/shubhendusaurabh/draughtsboardJS)
+[![License](https://img.shields.io/badge/license-MPL--2.0-green.svg)](https://github.com/shubhendusaurabh/draughtsboardJS/blob/master/LICENSE)
 
+A standalone JavaScript library for creating interactive draughts/checkers boards. Inspired by [ChessboardJS](https://github.com/oakmac/chessboardjs/), it provides a "just a board" approach with a powerful API for building draughts applications.
 
-What is draughtsboard?
---------------------------------------
+## Features
 
-draughtsboard is a standalone JavaScript Draughts Board. It is designed to be "just a board" and expose a powerful API so that it can be used in different ways. Here's a non-exhaustive list of things you can do with draughtsboard:
+✨ **Interactive Board**: Drag and drop pieces with smooth animations  
+🎯 **Position Management**: Full FEN notation support with enhanced parsing  
+🎨 **Customizable**: Multiple piece themes and visual options  
+📱 **Responsive**: Automatic resizing and mobile-friendly  
+⚡ **Performance**: Optimized animations with throttling and queueing  
+🛡️ **Type Safe**: Comprehensive TypeScript/JSDoc support  
+🧪 **Well Tested**: 300+ test cases covering edge cases and performance  
+
+## What is draughtsboard?
+
+draughtsboard is a standalone JavaScript Draughts Board designed to be "just a board" and expose a powerful API for building draughts applications. Here's what you can do with draughtsboard:
 
 - Use draughtsboard to show game positions alongside your expert commentary.
 - Use draughtsboard to have a tactics website where users have to guess the best move.
@@ -29,110 +39,254 @@ draughtsboard is designed to work well with any of those things, but the idea be
 
 See [draughts.js](https://github.com/shubhendusaurabh/draughts.js) library for parsing & validation.
 
-Installation
---------------------------------------
-Include `draughtsboard.js` & `draughtsboard.css` files in your html.
-Required: jQuery
-```
-<script src="/js/draughtsboard.js"></script>
-<link href="/css/draughtsboard.css" rel="stylesheet" />
+## Installation
+
+### Prerequisites
+- jQuery (3.x recommended)
+
+### Browser Installation
+Include the draughtsboard files in your HTML:
+
+```html
+<!-- Required: jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- draughtsboard CSS and JS -->
+<link rel="stylesheet" href="path/to/draughtsboard.css" />
+<script src="path/to/draughtsboard.js"></script>
 ```
 
-Docs and Examples
---------------------------------------
+### Module Usage
+draughtsboard supports CommonJS and AMD module patterns:
 
-## Example Usage
+```javascript
+// CommonJS
+const DraughtsBoard = require('draughtsboard');
+
+// AMD
+define(['draughtsboard'], function(DraughtsBoard) {
+    // Your code here
+});
+```
+
+## Quick Start
+
+### Basic Setup
+
+Create a simple board:
 
 ```html
 <div id="board" style="width: 500px"></div>
 ```
-```js
-function onSnapEnd() {
-    board.position(game.fen())
-}
-function onMouseoutSquare(square, piece) {
-    // code
-}
-function onMouseoverSquare(square, piece) {
-    // get list of possible moves for this square
-    var moves = game.getLegalMoves(square)
-    // rest of the coe
-}
-function onDrop(source, target) {
-    // see if the move is legal
-    var move = game.move({
-        from: source,
-        to: target,
-    })
-    // illegal move
-    if (move === null) return 'snapback'
-}
+
+```javascript
+// Create a board with starting position
+const board = DraughtsBoard('board', {
+    position: 'start',
+    draggable: true,
+    pieceTheme: 'unicode'
+});
+```
+
+### Advanced Example with Game Logic
+
+```javascript
+// Event handlers for interactive gameplay
 function onDragStart(source, piece, position, orientation) {
-    // do not pick up pieces if the game is over
-    if (game.gameOver()) return false
+    // Don't allow picking up opponent's pieces
+    if (game.gameOver()) return false;
+    
+    // Only allow dragging current player's pieces
+    return piece.search(/^w/) !== -1 && game.turn() === 'w';
 }
+
+function onDrop(source, target) {
+    // Validate move using game logic (e.g., draughts.js)
+    const move = game.move({
+        from: source,
+        to: target
+    });
+    
+    // Illegal move - return piece to source
+    if (move === null) return 'snapback';
+    
+    // Move was legal - update board position
+    updateStatus();
+}
+
+function onSnapEnd() {
+    // Update board position after animations complete
+    board.position(game.fen());
+}
+
+function onMouseoverSquare(square, piece) {
+    // Show possible moves for hovered piece
+    const moves = game.getLegalMoves(square);
+    highlightSquares(square, moves);
+}
+
+function onMouseoutSquare(square, piece) {
+    // Clear highlights
+    removeHighlights();
+}
+
+// Board configuration
 const config = {
     draggable: true,
     position: 'start',
+    pieceTheme: 'unicode',
     onDragStart: onDragStart,
     onDrop: onDrop,
     onSnapEnd: onSnapEnd,
-    onMouseoutSquare: onMouseoutSquare,
     onMouseoverSquare: onMouseoverSquare,
-    pieceTheme: 'unicode'
-}
-board = DraughtsBoard('board', config)
+    onMouseoutSquare: onMouseoutSquare,
+    moveSpeed: 'slow',
+    snapbackSpeed: 'fast'
+};
+
+const board = DraughtsBoard('board', config);
 ```
 
-### Config
+## API Reference
 
-Property | Type | Required | Default | Description
---- | --- | --- | --- | ---
-draggable | Boolean | no | false | if true, pieces on the board are draggable to other squares.
-dropOffBoard | 'snapback' or 'trash' | no | 'snapback' | If 'snapback', pieces dropped off the board will return to their original square. If 'trash', pieces dropped off the board will be removed from the board. This property has no effect when draggable is false.
-position | 'start' or FEN string | no | n/a | If provided, sets the initial position of the board.
-onChange | Function | no | n/a | Fires when the board position changes. The first argument to the function is the old position, the second argument is the new position.
-onDragStart | Function | no | n/a | Fires when a piece is picked up.
-onDragMove | Function | no | n/a | Fires when a dragged piece changes location.
-onDrop | Function | no | n/a | Fires when a piece is dropped.
-onMouseoutSquare | Function | no | n/a | Fires when the mouse leaves a square.
-onMouseoverSquare | Function | no | n/a | Fires when the mouse enters a square.
-onMoveEnd | Function | no | n/a | Fires at the end of animations when the board position changes.
-onSnapbackEnd | Function | no | n/a | Fires when the "snapback" animation is complete when pieces are dropped off the board.
-onSnapEnd | Function | no | n/a | Fires when the piece "snap" animation is complete.
-orientation | 'white' or 'black' | no | 'white' | If provided, sets the initial orientation of the board.
-showNotation | Boolean | no | true | Turn board notation on or off.
-sparePieces | Boolean | no | false | If true, the board will have spare pieces that can be dropped onto the board.
-showErrors | false or String or Function | no | n/a | showErrors is an optional parameter to control how ChessBoard reports errors.
-pieceTheme | String or Function | no | 'unicode' | A template string (img/draughtspieces/{piece}.png e.g. img/draughtspieces/w.png) used to determine the source of piece images.
-appearSpeed | Number or 'slow' or 'fast' | no | 200 | Animation speed for when pieces appear on a square.
-moveSpeed | Number or 'slow' or 'fast' | no | 200 | Animation speed for when pieces move between squares or from spare pieces to the board.
-snapbackSpeed | Number or 'slow' or 'fast' | no | 50 | Animation speed for when pieces that were dropped outside the board return to their original square.
-snapSpeed | Number or 'slow' or 'fast' | no | 25 | Animation speed for when pieces "snap" to a square when dropped.
-trashSpeed | Number or 'slow' or 'fast' | no | 100 | Animation speed for when pieces are removed.
+### Configuration Options
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `draggable` | `boolean` | `false` | Enable piece dragging |
+| `dropOffBoard` | `'snapback'` \| `'trash'` | `'snapback'` | Behavior when pieces are dropped off board |
+| `position` | `string` \| `object` | `'start'` | Initial position (FEN string, position object, or 'start') |
+| `orientation` | `'white'` \| `'black'` | `'white'` | Board orientation |
+| `showNotation` | `boolean` | `true` | Show square notation |
+| `showErrors` | `boolean` | `false` | Show error messages |
+| `sparePieces` | `boolean` | `false` | Show spare pieces area |
+| `pieceTheme` | `string` \| `function` | `'unicode'` | Piece theme or custom piece function |
+
+#### Animation Speeds
+All animation properties accept: `number` (milliseconds), `'slow'` (600ms), or `'fast'` (200ms)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `appearSpeed` | `200` | Animation speed for piece appearance |
+| `moveSpeed` | `200` | Animation speed for moves |
+| `snapSpeed` | `50` | Animation speed for snapping to squares |
+| `snapbackSpeed` | `200` | Animation speed for snapback |
+| `trashSpeed` | `100` | Animation speed for removing pieces |
+
+#### Event Callbacks
+
+| Callback | Signature | Description |
+|----------|-----------|-------------|
+| `onDrop` | `(source, target, position, orientation) => string \| void` | Fired when piece is dropped. Return `'snapback'` to cancel move |
+| `onDragStart` | `(source, piece, position, orientation) => boolean` | Fired when drag starts. Return `false` to prevent drag |
+| `onDragMove` | `(newLocation, oldLocation, source, piece, position, orientation) => void` | Fired during piece drag |
+| `onChange` | `(oldPos, newPos) => void` | Fired when board position changes |
+| `onSnapEnd` | `(position, orientation) => void` | Fired when snap animation completes |
+| `onMoveEnd` | `(oldPos, newPos) => void` | Fired when move animation completes |
+| `onSnapbackEnd` | `(piece, square, position, orientation) => void` | Fired when snapback animation completes |
+| `onInitComplete` | `() => void` | Fired when board initialization completes |
+| `onMouseoverSquare` | `(square, piece) => void` | Fired when mouse enters a square |
+| `onMouseoutSquare` | `(square, piece) => void` | Fired when mouse leaves a square |
 
 ### Methods
 
-Method | Args | Description
---- | --- | ---
-clear(useAnimation) | useAnimation - false | Removes all the pieces on the board. If useAnimation is false, removes pieces instantly.
-destroy() | none | Remove the widget from the DOM.
-fen() | none | Returns the current position as a FEN string.
-flip() | none | Flips the board orientation.
-move(move1, move2, etc) | moveN - '35-31', '19-23' | Executes one or more moves on the board. Returns an updated Position Object of the board including the move(s).
-position(fen) | fen - 'fen' (optional) | fen - 'fen' (optional)
-position(newPosition, useAnimation) | newPosition - Position Object, FEN string, or 'start' | Animates to a new position.
-orientation() | none | Returns the current orientation of the board.
-orientation(side) | side - 'white', 'black', or 'flip' | If 'white' or 'black', sets the orientation of the board accordingly. If 'flip', flips the orientation.
-resize() | none | Recalculates board and square sizes based on the parent element and redraws the board accordingly.
-start(useAnimation) | useAnimation - false (optional) | Sets the board to the start position.
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `clear(useAnimation?)` | `useAnimation?: boolean` | `object` | Remove all pieces from board |
+| `destroy()` | - | `object` | Remove board from DOM and clean up |
+| `fen()` | - | `string` | Get current position as FEN string |
+| `flip()` | - | `object` | Flip board orientation |
+| `move(...moves)` | `moves: string[]` | `object` | Execute one or more moves (e.g., '23-19', '27x31') |
+| `orientation()` | - | `'white' \| 'black'` | Get current board orientation |
+| `orientation(newOrientation)` | `'white' \| 'black' \| 'flip'` | `object` | Set board orientation |
+| `position()` | - | `object` | Get current position as position object |
+| `position(newPosition, animate?)` | `newPosition: string \| object`, `animate?: boolean` | `object` | Set new position |
+| `resize()` | - | `object` | Recalculate and redraw board dimensions |
+| `start(animate?)` | `animate?: boolean` | `object` | Set board to starting position |
 
-Sites using draughtsboard
---------------------------------------
+#### Position Formats
 
-- [draughtsboard in action](https://www.shubhu.in/checkers-online/)
+**FEN String Examples:**
+```javascript
+// Standard start position
+'W:W31-50:B1-20'
 
-License
---------------------------------------
+// Mixed notation with kings
+'W:WK41,31-39:BK10,1-9'
 
-draughtsboard is released under the [MPL License](https://github.com/shubhendusaurabh/draughtsboardjs/blob/master/LICENSE).
+// Complex position
+'W:WK32,K37,31-35:BK14,K18,11-15'
+```
+
+**Position Object Format:**
+```javascript
+{
+    '1': 'b',   // Black man on square 1
+    '2': 'B',   // Black king on square 2  
+    '31': 'w',  // White man on square 31
+    '32': 'W'   // White king on square 32
+}
+```
+
+## TypeScript Support
+
+draughtsboard includes comprehensive TypeScript definitions via JSDoc comments:
+
+```typescript
+interface DraughtsBoardConfig {
+    draggable?: boolean;
+    position?: string | Position;
+    orientation?: 'white' | 'black';
+    pieceTheme?: string | PieceThemeFunction;
+    onDrop?: (source: string, target: string, position: Position, orientation: Orientation) => string | void;
+    // ... other options
+}
+
+type PieceCode = 'w' | 'b' | 'W' | 'B';
+type Position = { [square: string]: PieceCode | null };
+```
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+npm run test        # Opens test.html in browser
+npm run test:server # Start HTTP server for testing
+```
+
+The test suite includes:
+- 300+ test cases covering core functionality
+- Edge cases and error handling
+- Performance and stress tests
+- Animation and interaction tests
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality  
+4. Ensure all tests pass
+5. Submit a pull request
+
+## Sites Using draughtsboard
+
+- [Checkers Online](https://www.shubhu.in/checkers-online/) - Interactive draughts game
+- Your site here? [Open an issue](https://github.com/shubhendusaurabh/draughtsboardJS/issues) to be added!
+
+## Related Projects
+
+- [draughts.js](https://github.com/shubhendusaurabh/draughts.js) - Draughts game logic library
+- [ChessboardJS](https://github.com/oakmac/chessboardjs/) - Chess board inspiration
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and breaking changes.
+
+## License
+
+draughtsboard is released under the [MPL-2.0 License](https://github.com/shubhendusaurabh/draughtsboardjs/blob/master/LICENSE).
+
+---
+
+**Made with ❤️ by [shubhu](https://github.com/shubhendusaurabh)**

@@ -9,7 +9,7 @@ describe('Utility Functions', function() {
             
             const result = DraughtsBoard.fenToObj(actualStartFEN);
             
-            expect(result).to.be.an('array');
+            expect(result).to.be.an('object');
             expect(result).to.not.be.false;
             
             // The result should have pieces
@@ -32,12 +32,12 @@ describe('Utility Functions', function() {
                 return;
             }
             
-            expect(result).to.be.an('array');
+            expect(result).to.be.an('object');
             // Check that kings are properly represented
-            expect(result[1]).to.equal('W'); // White king
-            expect(result[31]).to.equal('B'); // Black king
-            expect(result[2]).to.equal('w'); // Regular white piece
-            expect(result[32]).to.equal('b'); // Regular black piece
+            expect(result['1']).to.equal('W'); // White king
+            expect(result['31']).to.equal('B'); // Black king
+            expect(result['2']).to.equal('w'); // Regular white piece
+            expect(result['32']).to.equal('b'); // Regular black piece
         });
         
         it('should handle empty position FEN', function() {
@@ -50,7 +50,7 @@ describe('Utility Functions', function() {
                 return;
             }
             
-            expect(result).to.be.an('array');
+            expect(result).to.be.an('object');
             // Empty position should have no pieces
             const pieceCount = Object.keys(result).filter(key => result[key]).length;
             expect(pieceCount).to.equal(0);
@@ -68,8 +68,8 @@ describe('Utility Functions', function() {
         it('should convert position object to FEN', function() {
             // Test with a simple position that objToFen can handle
             const simplePosition = {};
-            simplePosition[1] = 'w';
-            simplePosition[31] = 'b';
+            simplePosition['1'] = 'w';
+            simplePosition['31'] = 'b';
             
             const fen = DraughtsBoard.objToFen(simplePosition);
             
@@ -108,7 +108,7 @@ describe('Utility Functions', function() {
             
             // Objects should be equivalent
             for(let i = 1; i <= 50; i++) {
-                expect(obj[i]).to.equal(obj2[i]);
+                expect(obj[i.toString()]).to.equal(obj2[i.toString()]);
             }
             
             // Clean up

@@ -1,6 +1,45 @@
 (function () {
   'use strict'
 
+  /**
+   * @typedef {'w'|'b'|'W'|'B'} PieceCode
+   * @typedef {Object.<string, PieceCode|null>} Position
+   * @typedef {'white'|'black'} Orientation
+   * @typedef {'snapback'|'trash'} DropOffBoardAction
+   * @typedef {'slow'|'fast'|number} AnimationSpeed
+   * @typedef {function(string, string, Position, Orientation): string} DropFunction
+   * @typedef {function(string, PieceCode, Position, Orientation): boolean} DragStartFunction
+   * @typedef {function(string, PieceCode): void} DragMoveFunction
+   * @typedef {function(Position, Position): void} ChangeFunction
+   * @typedef {function(Position, Orientation): void} SnapEndFunction
+   * @typedef {function(Position, Position): void} MoveEndFunction
+   * @typedef {function(): void} InitCompleteFunction
+   * @typedef {function(string, PieceCode, Position, Orientation): void} SnapbackEndFunction
+   * 
+   * @typedef {Object} DraughtsBoardConfig
+   * @property {boolean} [draggable=false] - Allow pieces to be dragged
+   * @property {DropOffBoardAction} [dropOffBoard='snapback'] - What happens when pieces are dropped off board
+   * @property {Position|string} [position='start'] - Starting position (FEN string or position object)
+   * @property {Orientation} [orientation='white'] - Board orientation
+   * @property {boolean} [showNotation=true] - Show square notation
+   * @property {boolean} [showErrors=false] - Show error messages
+   * @property {boolean} [sparePieces=false] - Show spare pieces
+   * @property {string} [pieceTheme='unicode'] - Piece theme
+   * @property {AnimationSpeed} [appearSpeed=200] - Animation speed for piece appearance
+   * @property {AnimationSpeed} [moveSpeed=200] - Animation speed for moves
+   * @property {AnimationSpeed} [snapSpeed=50] - Animation speed for snapping
+   * @property {AnimationSpeed} [snapbackSpeed=200] - Animation speed for snapback
+   * @property {AnimationSpeed} [trashSpeed=100] - Animation speed for trashing
+   * @property {DropFunction} [onDrop] - Callback when piece is dropped
+   * @property {DragStartFunction} [onDragStart] - Callback when drag starts
+   * @property {DragMoveFunction} [onDragMove] - Callback when piece is being dragged
+   * @property {SnapEndFunction} [onSnapEnd] - Callback when snap animation ends
+   * @property {MoveEndFunction} [onMoveEnd] - Callback when move animation ends
+   * @property {ChangeFunction} [onChange] - Callback when position changes
+   * @property {InitCompleteFunction} [onInitComplete] - Callback when initialization is complete
+   * @property {SnapbackEndFunction} [onSnapbackEnd] - Callback when snapback animation ends
+   */
+
   var SIZE
   var COLUMNS
   var UNICODES = {
@@ -11,6 +50,11 @@
     '0': '  '
   }
   var START_FEN
+  /**
+   * Validates if a move string is in the correct format
+   * @param {string} move - Move in format "27x31" or "23-32"
+   * @returns {boolean} True if move is valid format
+   */
   function validMove (move) {
     // move should be a string
     if (typeof move !== 'string') return false
@@ -22,24 +66,40 @@
     return (validSquare(tmp[0]) === true && validSquare(tmp[1]) === true)
   }
 
+  /**
+   * Validates if a square is valid (1-50 for draughts, with optional K prefix for kings)
+   * @param {string|number} square - Square identifier
+   * @returns {boolean} True if square is valid
+   */
   function validSquare (square) {
-    if (square && square.substr(0, 1) === 'K') {
-      square = square.substr(1)
+    if (square && square.toString().substr(0, 1) === 'K') {
+      square = square.toString().substr(1)
     }
     square = parseInt(square, 10)
-    return (square >= 0 && square < 51)
+    return (square >= 1 && square <= 50)
   }
 
+  /**
+   * Validates if a piece code is valid (w, b, W, B)
+   * @param {string} code - Piece code to validate
+   * @returns {boolean} True if piece code is valid
+   */
   function validPieceCode (code) {
     if (typeof code !== 'string') return false
     return (code.search(/^[bwBW]$/) !== -1)
   }
 
+  /**
+   * Validates if a FEN string is in the correct draughts format
+   * @param {string} fen - FEN string to validate
+   * @returns {boolean} True if FEN is valid
+   */
   // TODO: this whole function could probably be replaced with a single regex
   function validFen (fen) {
     if (typeof fen !== 'string') return false
     if (fen === START_FEN) return true
-    var FENPattern = /^(W|B):(W|B)((?:K?\d*)(?:,K?\d+)*?)(?::(W|B)((?:K?\d*)(?:,K?\d+)*?))?$/
+    // Updated pattern to support ranges (e.g., "31-50") and individual squares with optional K prefix
+    var FENPattern = /^(W|B):(W|B)([K]?\d+(?:-\d+)?(?:,[K]?\d+(?:-\d+)?)*)(?::(W|B)([K]?\d+(?:-\d+)?(?:,[K]?\d+(?:-\d+)?)*))?$/
     var matches = FENPattern.exec(fen)
     if (matches != null) {
       return true
@@ -47,6 +107,11 @@
     return false
   }
 
+  /**
+   * Validates if a position object has valid squares and piece codes
+   * @param {Position} pos - Position object to validate
+   * @returns {boolean} True if position is valid
+   */
   function validPositionObject (pos) {
     if (typeof pos !== 'object') return false
     // pos = fenToObj(pos)
@@ -63,8 +128,32 @@
     return true
   }
 
-  // convert FEN string to position object
-  // returns false if the FEN string is invalid
+  /**
+   * Filters a position object to only include valid squares and pieces
+   * @param {Position} pos - Position object to filter
+   * @returns {Position} Filtered position object with only valid entries
+   */
+  function filterValidPosition (pos) {
+    if (typeof pos !== 'object' || pos === null) return {}
+    
+    var filtered = {}
+    for (var i in pos) {
+      if (pos.hasOwnProperty(i) !== true) continue
+      if (pos[i] == null) {
+        continue
+      }
+      if (validSquare(i) === true && validPieceCode(pos[i]) === true) {
+        filtered[i] = pos[i]
+      }
+    }
+    return filtered
+  }
+
+  /**
+   * Converts FEN string to position object
+   * @param {string} fen - FEN string to convert
+   * @returns {Position|false} Position object or false if invalid
+   */
   function fenToObj (fen) {
     if (validFen(fen) !== true) {
       return false
@@ -76,31 +165,36 @@
     fen = fen.replace(/\..*$/, '')
 
     var rows = fen.split(':')
-    var position = []
-
-    var currentRow = 10
-    // var colIndex = 0
+    var position = {}
 
     for (var i = 1; i <= 2; i++) {
       var color = rows[i].substr(0, 1)
       var row = rows[i].substr(1)
-      var j
-      if (row.indexOf('-') !== -1) {
-        row = row.split('-')
-        for (j = parseInt(row[0], 10); j <= parseInt(row[1], 10); j++) {
-          position[j] = color.toLowerCase()
-        }
-      } else {
-        row = row.split(',')
-        for (j = 0; j < row.length; j++) {
-          if (row[j].substr(0, 1) === 'K') {
-            position[row[j].substr(1)] = color.toUpperCase()
-          } else {
-            position[row[j]] = color.toLowerCase()
+      
+      // Split by comma first to handle mixed notation (K1,2-5)
+      var parts = row.split(',')
+      
+      for (var p = 0; p < parts.length; p++) {
+        var part = parts[p]
+        
+        if (part.indexOf('-') !== -1) {
+          // Handle ranges (e.g., "2-5")
+          var rangeParts = part.split('-')
+          var start = parseInt(rangeParts[0], 10)
+          var end = parseInt(rangeParts[1], 10)
+          
+          for (var j = start; j <= end; j++) {
+            position[j.toString()] = color.toLowerCase()
           }
+        } else if (part.substr(0, 1) === 'K') {
+          // Handle kings (e.g., "K1")
+          var square = part.substr(1)
+          position[square] = color.toUpperCase()
+        } else {
+          // Handle individual squares (e.g., "1")
+          position[part] = color.toLowerCase()
         }
       }
-      currentRow--
     }
 
     return position
@@ -108,35 +202,64 @@
 
   // position object to FEN string
   // returns false if the obj is not a valid position object
+  /**
+   * Converts position object to FEN string
+   * @param {Position} obj - Position object to convert
+   * @returns {string|false} FEN string or false if invalid
+   */
   function objToFen (obj) {
     if (validPositionObject(obj) !== true) {
       return false
     }
     var black = []
     var white = []
-    for (var i = 0; i < obj.length; i++) {
-      switch (obj[i]) {
+    
+    for (var square in obj) {
+      if (obj.hasOwnProperty(square) !== true) continue
+      
+      var piece = obj[square]
+      var squareNum = parseInt(square, 10)
+      
+      switch (piece) {
         case 'w':
-          white.push(i)
+          white.push(squareNum)
           break
         case 'W':
-          white.push('K' + i)
+          white.push('K' + squareNum)
           break
         case 'b':
-          black.push(i)
+          black.push(squareNum)
           break
         case 'B':
-          black.push('K' + i)
+          black.push('K' + squareNum)
           break
         default:
           break
       }
     }
-    return 'w'.toUpperCase() + ':W' + white.join(',') + ':B' + black.join(',')
-
-  // return fen
+    
+    // Sort the arrays to ensure consistent output
+    white.sort(function(a, b) {
+      var aNum = typeof a === 'string' ? parseInt(a.substr(1), 10) : a
+      var bNum = typeof b === 'string' ? parseInt(b.substr(1), 10) : b
+      return aNum - bNum
+    })
+    black.sort(function(a, b) {
+      var aNum = typeof a === 'string' ? parseInt(a.substr(1), 10) : a
+      var bNum = typeof b === 'string' ? parseInt(b.substr(1), 10) : b
+      return aNum - bNum
+    })
+    
+    return 'W:W' + white.join(',') + ':B' + black.join(',')
   }
 
+  /**
+   * Creates a new DraughtsBoard instance
+   * @param {string|Element} containerElOrId - Container element or ID
+   * @param {DraughtsBoardConfig} [cfg={}] - Configuration options
+   * @param {string} [board='draughts'] - Board type ('draughts' or 'checkers')
+   * @returns {Object} DraughtsBoard widget object with methods
+   */
   window['DraughtsBoard'] = window['DraughtsBoard'] || function (containerElOrId, cfg, board) {
     cfg = cfg || {}
     board = board || 'draughts'
@@ -251,6 +374,73 @@
     // Validation / Errors
     // ------------------------------------------------------------------------------
 
+    /**
+     * Shows a non-blocking error notification
+     * @param {string} errorText - Error message to display
+     */
+    function showErrorNotification (errorText) {
+      // Try to create a visual notification element
+      try {
+        var notification = document.createElement('div')
+        notification.style.cssText = [
+          'position: fixed',
+          'top: 20px',
+          'right: 20px',
+          'background: #f44336',
+          'color: white',
+          'padding: 16px',
+          'border-radius: 4px',
+          'box-shadow: 0 4px 12px rgba(0,0,0,0.3)',
+          'font-family: monospace',
+          'font-size: 14px',
+          'max-width: 400px',
+          'z-index: 10000',
+          'line-height: 1.4'
+        ].join(';')
+        
+        // Create close button
+        var closeButton = document.createElement('span')
+        closeButton.innerHTML = '×'
+        closeButton.style.cssText = [
+          'position: absolute',
+          'top: 8px',
+          'right: 12px',
+          'cursor: pointer',
+          'font-size: 18px',
+          'font-weight: bold',
+          'opacity: 0.7'
+        ].join(';')
+        closeButton.onclick = function() {
+          if (notification && notification.parentNode) {
+            notification.parentNode.removeChild(notification)
+          }
+        }
+        
+        notification.innerHTML = errorText.replace(/\n/g, '<br>')
+        notification.appendChild(closeButton)
+        document.body.appendChild(notification)
+        
+        // Auto-remove after 5 seconds
+        setTimeout(function() {
+          if (notification && notification.parentNode) {
+            notification.parentNode.removeChild(notification)
+          }
+        }, 5000)
+        
+        // Also log to console
+        console.error('DraughtsBoard:', errorText)
+      } catch (e) {
+        // Fallback to console if DOM manipulation fails
+        console.error('DraughtsBoard:', errorText)
+      }
+    }
+
+    /**
+     * Handles error reporting based on configuration
+     * @param {number} code - Error code
+     * @param {string} msg - Error message
+     * @param {*} [obj] - Optional object to log
+     */
     function error (code, msg, obj) {
       // do nothing if showErrors is not set
       if (cfg.hasOwnProperty('showErrors') !== true ||
@@ -271,12 +461,12 @@
         return
       }
 
-      // alert errors
+      // show errors as non-blocking notifications
       if (cfg.showErrors === 'alert') {
         if (obj) {
           errorText += '\n\n' + JSON.stringify(obj)
         }
-        window.alert(errorText)
+        showErrorNotification(errorText)
         return
       }
 
@@ -286,24 +476,51 @@
       }
     }
 
+    /**
+     * Safely calls an event handler function with error handling
+     * @param {Function} handler - Event handler function to call
+     * @param {...*} [args] - Arguments to pass to the handler
+     * @returns {*} Handler return value, or undefined if error occurred
+     */
+    function callEventHandler (handler) {
+      if (typeof handler !== 'function') {
+        return undefined
+      }
+      
+      try {
+        var args = Array.prototype.slice.call(arguments, 1)
+        return handler.apply(null, args)
+      } catch (e) {
+        // Log the error but don't let it crash the board
+        error(8001, 'Event handler threw an error: ' + e.message, e)
+        return undefined
+      }
+    }
+
     // check dependencies
     function checkDeps () {
+      // check for null or undefined container
+      if (containerElOrId === null || containerElOrId === undefined) {
+        error(1005, 'The first argument to DraughtsBoard() cannot be null or undefined.')
+        return false
+      }
+
       // if containerId is a string, it must be the ID of a DOM node
       if (typeof containerElOrId === 'string') {
         // cannot be empty
         if (containerElOrId === '') {
-          window.alert('DraughtsBoard Error 1001: ' +
-            'The first argument to DraughtsBoard() cannot be an empty string.' +
-            '\n\nExiting...')
+          console.error('DraughtsBoard Error 1001: ' +
+            'The first argument to DraughtsBoard() cannot be an empty string. ' +
+            'Initialization failed.')
           return false
         }
 
         // make sure the container element exists in the DOM
         var el = document.getElementById(containerElOrId)
         if (!el) {
-          window.alert('DraughtsBoard Error 1002: Element with id "' +
-            containerElOrId + '" does not exist in the DOM.' +
-            '\n\nExiting...')
+          console.error('DraughtsBoard Error 1002: Element with id "' +
+            containerElOrId + '" does not exist in the DOM. ' +
+            'Initialization failed.')
           return false
         }
 
@@ -316,9 +533,9 @@
         containerEl = $(containerElOrId)
 
         if (containerEl.length !== 1) {
-          window.alert('DraughtsBoard Error 1003: The first argument to ' +
-            'DraughtsBoard() must be an ID or a single DOM node.' +
-            '\n\nExiting...')
+          console.error('DraughtsBoard Error 1003: The first argument to ' +
+            'DraughtsBoard() must be an ID or a single DOM node. ' +
+            'Initialization failed.')
           return false
         }
       }
@@ -327,17 +544,17 @@
       if (!window.JSON ||
         typeof JSON.stringify !== 'function' ||
         typeof JSON.parse !== 'function') {
-        window.alert('DraughtsBoard Error 1004: JSON does not exist. ' +
-          'Please include a JSON polyfill.\n\nExiting...')
+        console.error('DraughtsBoard Error 1004: JSON does not exist. ' +
+          'Please include a JSON polyfill. Initialization failed.')
         return false
       }
 
       // check for a compatible version of jQuery
       if (!(typeof window.$ && $.fn && $.fn.jquery &&
         compareSemVer($.fn.jquery, MINIMUM_JQUERY_VERSION) === true)) {
-        window.alert('DraughtsBoard Error 1005: Unable to find a valid version ' +
+        console.error('DraughtsBoard Error 1005: Unable to find a valid version ' +
           'of jQuery. Please include jQuery ' + MINIMUM_JQUERY_VERSION + ' or ' +
-          'higher on the page.\n\nExiting...')
+          'higher on the page. Initialization failed.')
         return false
       }
 
@@ -357,15 +574,24 @@
     }
 
     // validate config / set default options
+    /**
+     * Expands and validates configuration options with defaults
+     * @returns {boolean} True if config is valid
+     */
     function expandConfig () {
-      if (typeof cfg === 'string' || validPositionObject(cfg) === true) {
-        cfg = {
-          position: cfg
+      // Ensure cfg is a proper object
+      if (typeof cfg !== 'object' || cfg === null) {
+        if (typeof cfg === 'string' || validPositionObject(cfg) === true) {
+          cfg = {
+            position: cfg
+          }
+        } else {
+          cfg = {}
         }
       }
 
       // default for orientation is white
-      if (cfg.orientation !== 'black') {
+      if (cfg.orientation !== 'black' && cfg.orientation !== 'white') {
         cfg.orientation = 'white'
       }
       CURRENT_ORIENTATION = cfg.orientation
@@ -376,7 +602,9 @@
       }
 
       // default for draggable is false
-      if (cfg.draggable !== true) {
+      if (cfg.draggable !== true && cfg.draggable !== false) {
+        cfg.draggable = false
+      } else if (cfg.draggable !== true) {
         cfg.draggable = false
       }
 
@@ -434,6 +662,15 @@
           CURRENT_POSITION = deepCopy(cfg.position)
         } else {
           error(7263, 'Invalid value passed to config.position.', cfg.position)
+        }
+      }
+
+      // validate event handler functions - reset invalid ones to undefined
+      var eventHandlers = ['onDrop', 'onDragStart', 'onDragMove', 'onChange', 'onSnapEnd', 'onMoveEnd', 'onSnapbackEnd', 'onInitComplete']
+      for (var i = 0; i < eventHandlers.length; i++) {
+        var handler = eventHandlers[i]
+        if (cfg.hasOwnProperty(handler) && typeof cfg[handler] !== 'function') {
+          cfg[handler] = undefined
         }
       }
 
@@ -662,9 +899,26 @@
     function animateSquareToSquare (src, dest, piece, completeFn) {
       // get information about the source and destination squares
       var srcSquareEl = $('#' + SQUARE_ELS_IDS[src])
-      var srcSquarePosition = srcSquareEl.offset()
       var destSquareEl = $('#' + SQUARE_ELS_IDS[dest])
+      
+      // check if squares exist
+      if (srcSquareEl.length === 0 || destSquareEl.length === 0) {
+        if (typeof completeFn === 'function') {
+          completeFn()
+        }
+        return
+      }
+      
+      var srcSquarePosition = srcSquareEl.offset()
       var destSquarePosition = destSquareEl.offset()
+      
+      // check if positions are valid
+      if (!srcSquarePosition || !destSquarePosition) {
+        if (typeof completeFn === 'function') {
+          completeFn()
+        }
+        return
+      }
 
       // create the animated piece and absolutely position it
       // over the source square
@@ -699,7 +953,8 @@
       // animate the piece to the destination square
       var opts = {
         duration: cfg.moveSpeed,
-        complete: complete
+        complete: complete,
+        fail: complete // Ensure completion even if animation fails
       }
       animatedPieceEl.animate(destSquarePosition, opts)
     }
@@ -739,7 +994,8 @@
       // animate the piece to the destination square
       var opts = {
         duration: cfg.moveSpeed,
-        complete: complete
+        complete: complete,
+        fail: complete // Ensure completion even if animation fails
       }
       animatedPieceEl.animate(destOffset, opts)
     }
@@ -753,8 +1009,16 @@
       ANIMATION_HAPPENING = true
 
       var numFinished = 0
+      var animationTimeout = null
+      
       function onFinish () {
         numFinished++
+
+        // Clear timeout since we're finishing normally
+        if (animationTimeout) {
+          clearTimeout(animationTimeout)
+          animationTimeout = null
+        }
 
         // exit if all the animations aren't finished
         if (numFinished !== a.length) return
@@ -762,10 +1026,27 @@
         drawPositionInstant()
         ANIMATION_HAPPENING = false
 
+        // Process queued position updates
+        if (widget._positionQueue && widget._positionQueue.length > 0) {
+          var nextUpdate = widget._positionQueue.shift()
+          // Use setTimeout to prevent stack overflow and ensure async processing
+          setTimeout(function() {
+            try {
+              widget.position(nextUpdate.position, nextUpdate.useAnimation)
+            } catch (e) {
+              // Continue processing queue even if one update fails
+              if (widget._positionQueue && widget._positionQueue.length > 0) {
+                setTimeout(function() {
+                  widget.position(widget._positionQueue.shift().position, false)
+                }, 10)
+              }
+            }
+          }, 10)
+        }
+
         // run their onMoveEnd function
-        if (cfg.hasOwnProperty('onMoveEnd') === true &&
-          typeof cfg.onMoveEnd === 'function') {
-          cfg.onMoveEnd(deepCopy(oldPos), deepCopy(newPos))
+        if (cfg.hasOwnProperty('onMoveEnd') === true) {
+          callEventHandler(cfg.onMoveEnd, deepCopy(oldPos), deepCopy(newPos))
         }
       }
 
@@ -795,6 +1076,20 @@
             onFinish)
         }
       }
+
+      // Safety timeout to prevent hanging animations
+      var maxAnimationTime = Math.max(cfg.moveSpeed || 200, cfg.appearSpeed || 200, cfg.trashSpeed || 100)
+      if (typeof maxAnimationTime === 'string') {
+        maxAnimationTime = maxAnimationTime === 'fast' ? 200 : maxAnimationTime === 'slow' ? 600 : 400
+      }
+      
+      animationTimeout = setTimeout(function() {
+        if (ANIMATION_HAPPENING && numFinished < a.length) {
+          // Force completion of stuck animation
+          numFinished = a.length
+          onFinish()
+        }
+      }, maxAnimationTime + 1000) // Add 1 second buffer
     }
 
     // returns the distance between two squares
@@ -1000,9 +1295,8 @@
         return false
       }
       // run their onChange function
-      if (cfg.hasOwnProperty('onChange') === true &&
-        typeof cfg.onChange === 'function') {
-        cfg.onChange(oldPos, newPos)
+      if (cfg.hasOwnProperty('onChange') === true) {
+        callEventHandler(cfg.onChange, oldPos, newPos)
       }
 
       // update state
@@ -1055,9 +1349,8 @@
         draggedPieceEl.css('display', 'none')
 
         // run their onSnapbackEnd function
-        if (cfg.hasOwnProperty('onSnapbackEnd') === true &&
-          typeof cfg.onSnapbackEnd === 'function') {
-          cfg.onSnapbackEnd(DRAGGED_PIECE, DRAGGED_PIECE_SOURCE,
+        if (cfg.hasOwnProperty('onSnapbackEnd') === true) {
+          callEventHandler(cfg.onSnapbackEnd, DRAGGED_PIECE, DRAGGED_PIECE_SOURCE,
             deepCopy(CURRENT_POSITION), CURRENT_ORIENTATION)
         }
       }
@@ -1113,9 +1406,8 @@
         draggedPieceEl.css('display', 'none')
 
         // execute their onSnapEnd function
-        if (cfg.hasOwnProperty('onSnapEnd') === true &&
-          typeof cfg.onSnapEnd === 'function') {
-          cfg.onSnapEnd(DRAGGED_PIECE_SOURCE, square, DRAGGED_PIECE)
+        if (cfg.hasOwnProperty('onSnapEnd') === true) {
+          callEventHandler(cfg.onSnapEnd, DRAGGED_PIECE_SOURCE, square, DRAGGED_PIECE)
         }
       }
 
@@ -1133,10 +1425,12 @@
     function beginDraggingPiece (source, piece, x, y) {
       // run their custom onDragStart function
       // their custom onDragStart function can cancel drag start
-      if (typeof cfg.onDragStart === 'function' &&
-        cfg.onDragStart(source, piece,
-          deepCopy(CURRENT_POSITION), CURRENT_ORIENTATION) === false) {
-        return
+      if (typeof cfg.onDragStart === 'function') {
+        var result = callEventHandler(cfg.onDragStart, source, piece,
+          deepCopy(CURRENT_POSITION), CURRENT_ORIENTATION)
+        if (result === false) {
+          return
+        }
       }
       // set state
       DRAGGING_A_PIECE = true
@@ -1202,7 +1496,7 @@
 
       // run onDragMove
       if (typeof cfg.onDragMove === 'function') {
-        cfg.onDragMove(location, DRAGGED_PIECE_LOCATION,
+        callEventHandler(cfg.onDragMove, location, DRAGGED_PIECE_LOCATION,
           DRAGGED_PIECE_SOURCE, DRAGGED_PIECE,
           deepCopy(CURRENT_POSITION), CURRENT_ORIENTATION)
       }
@@ -1222,8 +1516,7 @@
       }
 
       // run their onDrop function, which can potentially change the drop action
-      if (cfg.hasOwnProperty('onDrop') === true &&
-        typeof cfg.onDrop === 'function') {
+      if (cfg.hasOwnProperty('onDrop') === true) {
         var newPosition = deepCopy(CURRENT_POSITION)
 
         // source piece is a spare piece and position is off the board
@@ -1252,8 +1545,9 @@
 
         var oldPosition = deepCopy(CURRENT_POSITION)
 
-        var result = cfg.onDrop(DRAGGED_PIECE_SOURCE, location, DRAGGED_PIECE,
+        var result = callEventHandler(cfg.onDrop, DRAGGED_PIECE_SOURCE, location, DRAGGED_PIECE,
           newPosition, oldPosition, CURRENT_ORIENTATION)
+        // Only accept valid return values
         if (result === 'snapback' || result === 'trash') {
           action = result
         }
@@ -1273,12 +1567,17 @@
     // Public Methods
     // ------------------------------------------------------------------------------
 
-    // clear the board
+    /**
+     * Clears the board of all pieces
+     * @param {boolean} [useAnimation=true] - Whether to animate the clearing
+     */
     widget.clear = function (useAnimation) {
       widget.position({}, useAnimation)
     }
 
-    // remove the widget from the page
+    /**
+     * Removes the widget from the page and cleans up
+     */
     widget.destroy = function () {
       // remove markup
       containerEl.html('')
@@ -1305,7 +1604,11 @@
     }
     */
 
-    // move pieces
+    /**
+     * Moves pieces on the board
+     * @param {...(string|boolean)} moves - Move strings like "27x31" or "23-32", or false to disable animation
+     * @returns {Position} New position after moves
+     */
     widget.move = function () {
       // no need to throw an error here; just do nothing
       if (arguments.length === 0) return
@@ -1341,6 +1644,11 @@
       return newPos
     }
 
+    /**
+     * Gets or sets the board orientation
+     * @param {Orientation|'flip'} [arg] - 'white', 'black', or 'flip' to flip current
+     * @returns {Orientation} Current orientation
+     */
     widget.orientation = function (arg) {
       // no arguments, return the current orientation
       if (arguments.length === 0) {
@@ -1364,6 +1672,12 @@
       error(5482, 'Invalid value passed to the orientation method.', arg)
     }
 
+    /**
+     * Gets or sets the board position
+     * @param {Position|string} [position] - Position object, FEN string, 'fen', or 'start'
+     * @param {boolean} [useAnimation=true] - Whether to animate the position change
+     * @returns {Position|string|undefined} Current position if no args, FEN if 'fen' passed
+     */
     widget.position = function (position, useAnimation) {
       // no arguments, return the current position
       if (arguments.length === 0) {
@@ -1390,13 +1704,24 @@
         position = fenToObj(position)
       }
 
-      // validate position object
-      if (validPositionObject(position) !== true) {
+      // filter out invalid squares and pieces, but don't reject the whole position
+      if (typeof position === 'object' && position !== null) {
+        position = filterValidPosition(position)
+      } else {
         error(6482, 'Invalid value passed to the position method.', position)
         return
       }
 
       if (useAnimation === true) {
+        // If animation is already happening, queue this update
+        if (ANIMATION_HAPPENING) {
+          if (!widget._positionQueue) {
+            widget._positionQueue = []
+          }
+          widget._positionQueue.push({ position: position, useAnimation: useAnimation })
+          return deepCopy(position)
+        }
+
         // start the animations
         doAnimations(calculateAnimations(CURRENT_POSITION, position),
           CURRENT_POSITION, position)
@@ -1409,32 +1734,50 @@
         setCurrentPosition(position)
         drawPositionInstant()
       }
+
+      // return the new position
+      return deepCopy(position)
     }
 
+    /**
+     * Recalculates board dimensions and redraws the board
+     */
     widget.resize = function () {
-      // calulate the new square size
-      SQUARE_SIZE = calculateSquareSize()
-
-      // set board width
-      boardEl.css('width', (SQUARE_SIZE * SIZE) + 'px')
-
-      // set drag piece size
-      draggedPieceEl.css({
-        height: SQUARE_SIZE,
-        width: SQUARE_SIZE
-      })
-
-      // spare pieces
-      if (cfg.sparePieces === true) {
-        containerEl.find('.' + CSS.sparePieces)
-          .css('paddingLeft', (SQUARE_SIZE + BOARD_BORDER_SIZE) + 'px')
+      // Throttle resize calls to improve performance
+      if (widget._resizeTimeout) {
+        clearTimeout(widget._resizeTimeout)
       }
+      
+      widget._resizeTimeout = setTimeout(function() {
+        // calulate the new square size
+        SQUARE_SIZE = calculateSquareSize()
 
-      // redraw the board
-      drawBoard()
+        // set board width
+        boardEl.css('width', (SQUARE_SIZE * SIZE) + 'px')
+
+        // set drag piece size
+        draggedPieceEl.css({
+          height: SQUARE_SIZE,
+          width: SQUARE_SIZE
+        })
+
+        // spare pieces
+        if (cfg.sparePieces === true) {
+          containerEl.find('.' + CSS.sparePieces)
+            .css('paddingLeft', (SQUARE_SIZE + BOARD_BORDER_SIZE) + 'px')
+        }
+
+        // redraw the board
+        drawBoard()
+        
+        widget._resizeTimeout = null
+      }, 16) // ~60fps throttling
     }
 
-    // set the starting position
+    /**
+     * Sets the board to the starting position
+     * @param {boolean} [useAnimation=true] - Whether to animate the position change
+     */
     widget.start = function (useAnimation) {
       widget.position('start', useAnimation)
     }
@@ -1680,16 +2023,22 @@
   // end window.DraughtsBoard
 
   // expose util functions
+  /**
+   * @type {function(string): Position|false}
+   */
   window.DraughtsBoard.fenToObj = fenToObj
+  /**
+   * @type {function(Position): string|false}
+   */
   window.DraughtsBoard.objToFen = objToFen
 
   if (typeof exports !== 'undefined') {
-    exports.DraughtsBoard = DraughtsBoard
+    exports.DraughtsBoard = window.DraughtsBoard
   }
 
   if (typeof define !== 'undefined') {
     define(function () {
-      return DraughtsBoard
+      return window.DraughtsBoard
     })
   }
 })()

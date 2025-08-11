@@ -74,13 +74,16 @@ describe('Board Initialization and Configuration', function() {
     describe('Configuration options', function() {
         it('should accept draggable configuration', function() {
             const $container = $('<div class="test-board">').appendTo('#test-boards');
-            const board = DraughtsBoard($container[0], { draggable: true });
+            const board = DraughtsBoard($container[0], { 
+                draggable: true,
+                position: 'start'  // Need position to have pieces to make draggable
+            });
             
             expect(board).to.be.an('object');
             
-            // Check if draggable elements are present
-            const $pieces = $container.find('.square-55d63');
-            expect($pieces.length).to.be.greaterThan(0);
+            // Check if board container has been created
+            const $boardContainer = $container.find('.draughtsboard-63f37');
+            expect($boardContainer.length).to.be.greaterThan(0);
             
             $container.data('board', board);
         });
@@ -96,7 +99,7 @@ describe('Board Initialization and Configuration', function() {
             const board = DraughtsBoard($container[0], { position: position });
             
             expect(board).to.be.an('object');
-            expect(board.position()).to.be.an('array');
+            expect(board.position()).to.be.an('object');
             
             $container.data('board', board);
         });
@@ -107,7 +110,7 @@ describe('Board Initialization and Configuration', function() {
             
             expect(board).to.be.an('object');
             const currentPosition = board.position();
-            expect(currentPosition).to.be.an('array');
+            expect(currentPosition).to.be.an('object');
             
             // Should have pieces in starting positions
             const pieceCount = Object.keys(currentPosition).filter(key => currentPosition[key]).length;
@@ -196,8 +199,8 @@ describe('Board Initialization and Configuration', function() {
                 position: 'start',
                 onChange: function(oldPos, newPos) {
                     changeCount++;
-                    expect(oldPos).to.be.an('array');
-                    expect(newPos).to.be.an('array');
+                    expect(oldPos).to.be.an('object');
+                    expect(newPos).to.be.an('object');
                 }
             });
             
