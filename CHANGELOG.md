@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-01-13
+
 ### Added
 - Comprehensive JSDoc type annotations for better TypeScript support
 - Enhanced FEN parsing with support for mixed notation (kings and ranges in same section)
@@ -91,7 +93,8 @@ If upgrading from a previous version:
 
 ## Version History Summary
 
-- **v0.2.0+**: Enhanced stability, comprehensive testing, and improved developer experience
+- **v0.3.0**: Major improvements with breaking changes - enhanced FEN parsing, comprehensive TypeScript support, and robust error handling
+- **v0.2.0**: Enhanced stability, comprehensive testing, and improved developer experience
 - **v0.1.1**: Basic functionality with core features
 - **v0.1.0**: Initial implementation
 

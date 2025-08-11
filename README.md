@@ -1,6 +1,6 @@
 # draughtsboard - JavaScript Draughts Board
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/shubhendusaurabh/draughtsboardJS)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/shubhendusaurabh/draughtsboardJS)
 [![License](https://img.shields.io/badge/license-MPL--2.0-green.svg)](https://github.com/shubhendusaurabh/draughtsboardJS/blob/master/LICENSE)
 
 A standalone JavaScript library for creating interactive draughts/checkers boards. Inspired by [ChessboardJS](https://github.com/oakmac/chessboardjs/), it provides a "just a board" approach with a powerful API for building draughts applications.
