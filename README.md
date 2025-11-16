@@ -5,6 +5,8 @@
 
 A standalone JavaScript library for creating interactive draughts/checkers boards. Inspired by [ChessboardJS](https://github.com/oakmac/chessboardjs/), it provides a "just a board" approach with a powerful API for building draughts applications.
 
+**[Try the Interactive Demo →](https://shubhendusaurabh.github.io/draughtsboardJS/)**
+
 ## Features
 
 ✨ **Interactive Board**: Drag and drop pieces with smooth animations  

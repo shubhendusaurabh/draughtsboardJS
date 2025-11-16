@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DraughtsBoard.js - Interactive Draughts/Checkers Board Library</title>
+    <link rel="stylesheet" href="draughtsboard.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .header-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .header-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .board-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .control-panel h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .fen-input-group {
+            margin-top: 15px;
+        }
+
+        .fen-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .example-positions {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .example-positions h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .example-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .example-fen {
+            font-size: 12px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .status-bar {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .features {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .features h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            opacity: 0.9;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .board-section {
+                padding: 15px;
+            }
+        }
+
+        /* Board container */
+        #board-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Highlight styles */
+        .highlight-white {
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+
+        .highlight-black {
+            box-shadow: inset 0 0 3px 3px blue;
+        }
+
+        .highlight-move {
+            background: rgba(255, 255, 0, 0.4) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>DraughtsBoard.js</h1>
+            <div class="subtitle">Interactive Draughts/Checkers Board Library</div>
+            <div class="header-links">
+                <a href="https://github.com/shubhendusaurabh/draughtsboardJS" target="_blank">GitHub</a>
+                <a href="https://github.com/shubhendusaurabh/draughtsboardJS#readme" target="_blank">Documentation</a>
+                <a href="https://github.com/shubhendusaurabh/draughts.js" target="_blank">draughts.js Library</a>
+            </div>
+        </header>
+
+        <div class="features">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Drag & Drop</div>
+                    <div class="feature-desc">Smooth, interactive piece movement</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Performance</div>
+                    <div class="feature-desc">Optimized animations & throttling</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">Customizable</div>
+                    <div class="feature-desc">Themes, colors, and visual options</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Responsive</div>
+                    <div class="feature-desc">Works on all devices & screen sizes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="board-section">
+                <div id="board-container"></div>
+                <div class="status-bar" id="status">
+                    Turn: <span id="turn">White</span> | Position: <span id="position-info">Start</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-panel">
+                    <h3>Board Controls</h3>
+                    <div class="button-group">
+                        <button onclick="board.start()">Start Position</button>
+                        <button onclick="board.clear()">Clear Board</button>
+                        <button onclick="board.flip()">Flip Board</button>
+                        <button onclick="toggleDraggable()">Toggle Dragging</button>
+                    </div>
+                    <div class="fen-input-group">
+                        <label for="fen-input">Set Position (FEN):</label>
+                        <input type="text" id="fen-input" placeholder="W:W31-50:B1-20">
+                        <button onclick="setFEN()" style="margin-top: 10px; width: 100%;">Set Position</button>
+                    </div>
+                    <div class="fen-input-group">
+                        <label>Current FEN:</label>
+                        <input type="text" id="current-fen" readonly>
+                    </div>
+                </div>
+
+                <div class="example-positions">
+                    <h3>Example Positions</h3>
+                    <div class="example-item" onclick="loadExample('W:W31-50:B1-20')">
+                        <div class="example-title">Starting Position</div>
+                        <div class="example-fen">W:W31-50:B1-20</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:W32,33,34,35,36,37,38,39,40:B11,12,13,14,15,16,17,18,19,20')">
+                        <div class="example-title">Mid Game</div>
+                        <div class="example-fen">W:W32,33,34,35,36,37,38,39,40:B11,12,13,14,15,16,17,18,19,20</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:WK32,K37,31-35:BK14,K18,11-15')">
+                        <div class="example-title">Kings Position</div>
+                        <div class="example-fen">W:WK32,K37,31-35:BK14,K18,11-15</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:W13,K22,25,33,35,44,K45,46:B1,2,3,6,9,10,12,14,16,20,21,K49')">
+                        <div class="example-title">Complex Game</div>
+                        <div class="example-fen">W:W13,K22,25,33,35,44,K45,46:B1,2,3,6,9,10,12,14,16,20,21,K49</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:WK28,K32:BK17,K21')">
+                        <div class="example-title">Endgame - Kings Only</div>
+                        <div class="example-fen">W:WK28,K32:BK17,K21</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with DraughtsBoard.js v0.3.0 | <a href="https://github.com/shubhendusaurabh/draughtsboardJS">View on GitHub</a></p>
+            <p>Made with ❤️ by <a href="https://github.com/shubhendusaurabh">shubhu</a></p>
+        </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="draughtsboard.js"></script>
+    <script>
+        // Initialize board
+        let board;
+        let draggableEnabled = true;
+
+        const config = {
+            draggable: true,
+            position: 'start',
+            pieceTheme: 'unicode',
+            showNotation: true,
+            onChange: updatePosition,
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            onMouseoverSquare: onMouseoverSquare,
+            onMouseoutSquare: onMouseoutSquare
+        };
+
+        board = DraughtsBoard('board-container', config);
+
+        // Update position info
+        function updatePosition(oldPos, newPos) {
+            const fen = board.fen();
+            document.getElementById('current-fen').value = fen;
+
+            // Update position info
+            const pieceCount = Object.keys(newPos).length;
+            document.getElementById('position-info').textContent = pieceCount + ' pieces';
+
+            // Update turn (simple alternating logic for demo)
+            const currentTurn = document.getElementById('turn').textContent;
+            document.getElementById('turn').textContent = currentTurn === 'White' ? 'Black' : 'White';
+        }
+
+        // Drag start handler
+        function onDragStart(source, piece, position, orientation) {
+            if (!draggableEnabled) return false;
+
+            // For demo purposes, allow all moves
+            // In a real game, you'd check if it's the correct player's turn
+            return true;
+        }
+
+        // Drop handler
+        function onDrop(source, target, position, orientation) {
+            removeHighlights();
+
+            // For demo purposes, allow all moves
+            // In a real game, you'd validate with draughts.js or similar library
+            return;
+        }
+
+        // Snap end handler
+        function onSnapEnd() {
+            updatePosition({}, board.position());
+        }
+
+        // Highlight possible moves on hover
+        function onMouseoverSquare(square, piece) {
+            if (!piece || !draggableEnabled) return;
+
+            // Highlight the source square
+            highlightSquare(square);
+        }
+
+        function onMouseoutSquare(square, piece) {
+            removeHighlights();
+        }
+
+        // Utility functions
+        function highlightSquare(square) {
+            const $square = $('#board-container .square-' + square);
+            $square.addClass('highlight-move');
+        }
+
+        function removeHighlights() {
+            $('#board-container .square-55d63').removeClass('highlight-move');
+        }
+
+        function setFEN() {
+            const fen = document.getElementById('fen-input').value.trim();
+            if (fen) {
+                try {
+                    board.position(fen);
+                    updatePosition({}, board.position());
+                    document.getElementById('fen-input').value = '';
+                } catch(e) {
+                    alert('Invalid FEN notation. Please check the format.');
+                }
+            }
+        }
+
+        function loadExample(fen) {
+            board.position(fen);
+            updatePosition({}, board.position());
+        }
+
+        function toggleDraggable() {
+            draggableEnabled = !draggableEnabled;
+            const btn = event.target;
+            btn.textContent = draggableEnabled ? 'Toggle Dragging' : 'Enable Dragging';
+            btn.style.background = draggableEnabled
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                : 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+        }
+
+        // Initialize current FEN display
+        document.getElementById('current-fen').value = board.fen();
+
+        // Handle Enter key in FEN input
+        document.getElementById('fen-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                setFEN();
+            }
+        });
+    </script>
+</body>
+</html>
