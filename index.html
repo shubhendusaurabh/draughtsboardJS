@@ -1,202 +1,532 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <link href="//rawgit.com/shubhendusaurabh/draughtsboardJS/master/draughtsboard.css" rel="stylesheet" />
-    <title>Draughtsboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DraughtsBoard.js - Interactive Draughts/Checkers Board Library</title>
+    <link rel="stylesheet" href="draughtsboard.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .header-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .header-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .board-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .control-panel h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .fen-input-group {
+            margin-top: 15px;
+        }
+
+        .fen-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .example-positions {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .example-positions h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .example-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .example-fen {
+            font-size: 12px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .status-bar {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .features {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .features h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            opacity: 0.9;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .board-section {
+                padding: 15px;
+            }
+        }
+
+        /* Board container */
+        #board-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Highlight styles */
+        .highlight-white {
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+
+        .highlight-black {
+            box-shadow: inset 0 0 3px 3px blue;
+        }
+
+        .highlight-move {
+            background: rgba(255, 255, 0, 0.4) !important;
+        }
     </style>
 </head>
-
 <body>
-    <h2 style="text-align: center;">Draughts board</h2>
-    <div id="board" style="width: 400px; height: 400px; margin: 0 auto;"></div>
-    <div style="text-align:center">
-        <p>PDN Example</p>
-        <textarea id="pdn">
-[Event "18th Computer Olympiad, 10x10 Draughts"]
-[Site "Leiden, NLD"]
-[Date "2015.07.04"]
-[Round "1"]
-[White "Scan"]
-[Black "Moby Dam (Jun 30 2015)"]
-[Result "1-0"]
+    <div class="container">
+        <header>
+            <h1>DraughtsBoard.js</h1>
+            <div class="subtitle">Interactive Draughts/Checkers Board Library</div>
+            <div class="header-links">
+                <a href="https://github.com/shubhendusaurabh/draughtsboardJS" target="_blank">GitHub</a>
+                <a href="https://github.com/shubhendusaurabh/draughtsboardJS#readme" target="_blank">Documentation</a>
+                <a href="https://github.com/shubhendusaurabh/draughts.js" target="_blank">draughts.js Library</a>
+            </div>
+        </header>
 
-1. 34-30 19-23 2. 30-25 20-24 3. 33-29 24x33 4. 39x19 14x23 5. 40-34 9-14 6.
-44-39 14-20 7. 25x14 10x19 8. 50-44 5-10 9. 38-33 10-14 10. 42-38 23-28 11.
-32x23 18x40 12. 45x34 12-18 13. 35-30 7-12 14. 37-32 18-23 15. 44-40 12-18 16.
-41-37 1-7 17. 46-41 7-12 18. 47-42 23-28 19. 33x22 17x28 20. 32x23 19x28 21.
-38-32 13-19 22. 32x23 19x28 23. 43-38 8-13 24. 38-32 13-19 25. 32x23 19x28 26.
-42-38 11-17 27. 31-27 6-11 28. 38-33 18-23 29. 33x22 17x28 30. 37-31 11-17 31.
-27-22 28-32 32. 22x11 16x7 33. 48-42 12-18 34. 31-26 2-8 35. 36-31 7-12 36.
-40-35 15-20 37. 49-43 23-28 38. 34-29 12-17 39. 30-24 20-25 40. 42-38 25-30
-41. 38x27 30x19 42. 41-36 28-32 43. 27x38 19-23 44. 31-27 23x34 45. 39x30 8-12
-46. 30-24 3-8 47. 43-39 18-23 48. 27-21 23-28 49. 36-31 8-13 50. 35-30 14-19
-51. 21-16 12-18 52. 31-27 19-23 53. 38-33 28-32 54. 27x38 18-22 55. 24-20
-22-27 56. 30-24 17-21 57. 26x17 27-31 58. 17-12 31-36 59. 12-7 36-41 60. 38-32
-13-18 61. 7-2 23-29 62. 2-13 29x27 63. 13x47 4-10 64. 24-19 10-15 65. 47-24
-1-0
-    </textarea>
-    <p>FEN examples</p>
-    <textarea id="fen">
-W:W13,K22,25,33,35,44,K45,46:B1,2,3,6,9,10,12,14,16,20,21,K49
-    </textarea>
-    <textarea id="fen2">
-W:W13,K22,25,32:B1,2,3,6,K9,12,11
-    </textarea>
+        <div class="features">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Drag & Drop</div>
+                    <div class="feature-desc">Smooth, interactive piece movement</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Performance</div>
+                    <div class="feature-desc">Optimized animations & throttling</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">Customizable</div>
+                    <div class="feature-desc">Themes, colors, and visual options</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Responsive</div>
+                    <div class="feature-desc">Works on all devices & screen sizes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="board-section">
+                <div id="board-container"></div>
+                <div class="status-bar" id="status">
+                    Turn: <span id="turn">White</span> | Position: <span id="position-info">Start</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-panel">
+                    <h3>Board Controls</h3>
+                    <div class="button-group">
+                        <button onclick="board.start()">Start Position</button>
+                        <button onclick="board.clear()">Clear Board</button>
+                        <button onclick="board.flip()">Flip Board</button>
+                        <button onclick="toggleDraggable()">Toggle Dragging</button>
+                    </div>
+                    <div class="fen-input-group">
+                        <label for="fen-input">Set Position (FEN):</label>
+                        <input type="text" id="fen-input" placeholder="W:W31-50:B1-20">
+                        <button onclick="setFEN()" style="margin-top: 10px; width: 100%;">Set Position</button>
+                    </div>
+                    <div class="fen-input-group">
+                        <label>Current FEN:</label>
+                        <input type="text" id="current-fen" readonly>
+                    </div>
+                </div>
+
+                <div class="example-positions">
+                    <h3>Example Positions</h3>
+                    <div class="example-item" onclick="loadExample('W:W31-50:B1-20')">
+                        <div class="example-title">Starting Position</div>
+                        <div class="example-fen">W:W31-50:B1-20</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:W32,33,34,35,36,37,38,39,40:B11,12,13,14,15,16,17,18,19,20')">
+                        <div class="example-title">Mid Game</div>
+                        <div class="example-fen">W:W32,33,34,35,36,37,38,39,40:B11,12,13,14,15,16,17,18,19,20</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:WK32,K37,31-35:BK14,K18,11-15')">
+                        <div class="example-title">Kings Position</div>
+                        <div class="example-fen">W:WK32,K37,31-35:BK14,K18,11-15</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:W13,K22,25,33,35,44,K45,46:B1,2,3,6,9,10,12,14,16,20,21,K49')">
+                        <div class="example-title">Complex Game</div>
+                        <div class="example-fen">W:W13,K22,25,33,35,44,K45,46:B1,2,3,6,9,10,12,14,16,20,21,K49</div>
+                    </div>
+                    <div class="example-item" onclick="loadExample('W:WK28,K32:BK17,K21')">
+                        <div class="example-title">Endgame - Kings Only</div>
+                        <div class="example-fen">W:WK28,K32:BK17,K21</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with DraughtsBoard.js v0.3.0 | <a href="https://github.com/shubhendusaurabh/draughtsboardJS">View on GitHub</a></p>
+            <p>Made with ❤️ by <a href="https://github.com/shubhendusaurabh">shubhu</a></p>
+        </footer>
     </div>
-    <script src="//code.jquery.com/jquery-2.2.1.min.js"></script>
-    <script src="//rawgit.com/shubhendusaurabh/draughts.js/master/draughts.js"></script>
-    <script src="//rawgit.com/shubhendusaurabh/draughtsboardJS/master/draughtsboard.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="draughtsboard.js"></script>
     <script>
+        // Initialize board
+        let board;
+        let draggableEnabled = true;
 
-    var sample = '';
-    sample += '[Event "NK 2009, ronde 12, 17 april"]' + '\n';
-    sample += '[Site "nk2009.dvvbi.nl"]' + '\n';
-    sample += '[Date "17 april 2009"]' + '\n';
-    sample += '[Round "12"]' + '\n';
-    sample += '[White "Jeroen van den Akker"]' + '\n';
-    sample += '[Black "Roel Boomstra"]' + '\n';
-    sample += '[Result "1-1"]' + '\n';
-    sample += '' + '\n';
-    sample += '1. 32-28 17-22  2. 28x17 11x22  3. 37-32  6-11  4. 41-37 12-17  5. 46-41  8-12' + '\n';
-    sample += '6. 34-29 19-23  7. 40-34 14-19  8. 45-40 10-14  9. 32-28 23x32 10. 37x28  5-10' + '\n';
-    sample += '11. 41-37 20-24 12. 29x20 15x24 13. 34-30 16-21 14. 31-26 11-16 15. 37-31  1-6 ' + '\n';
-    sample += '16. 40-34  7-11 17. 30-25  2-7  18. 34-30  3-8  19. 39-34 18-23 20. 47-41 23x32' + '\n';
-    sample += '21. 38x18 12x23 22. 34-29 23x34 23. 30x39  7-12 24. 43-38 19-23 25. 41-37 13-18' + '\n';
-    sample += '26. 37-32 24-29 27. 33x24 23-28 28. 32x23 18x20 29. 42-37 20-24 30. 37-32 12-18' + '\n';
-    sample += '31. 39-33  8-13 32. 49-43 18-22 33. 32-27 21x32 34. 38x18 13x22 35. 31-27 22x31' + '\n';
-    sample += '36. 26x37 14-19 37. 43-38 19-23 38. 48-42 10-14 39. 44-40  9-13 40. 40-34 23-28' + '\n';
-    sample += '41. 33x22 17x28 42. 50-44 11-17 43. 34-29 24x33 44. 38x29 16-21 45. 44-39 17-22' + '\n';
-    sample += '46. 42-38 21-27 47. 35-30  6-11 48. 30-24 11-17 49. 38-33 13-18 50. 37-31 28-32' + '\n';
-    sample += '51. 24-20 14-19 52. 29-24 19x30 53. 25x34 17-21 54. 33-28 22x44 55. 31x13 44-50' + '\n';
-    sample += '56. 13-8  32-38 57.  8-2  38-43 58. 20-14 43-48 59.  2-16 48x3  60. 16x32  3-26' + '\n';
-    sample += '1-1' + '\n' + '\n';
+        const config = {
+            draggable: true,
+            position: 'start',
+            pieceTheme: 'unicode',
+            showNotation: true,
+            onChange: updatePosition,
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            onMouseoverSquare: onMouseoverSquare,
+            onMouseoutSquare: onMouseoutSquare
+        };
 
-var game = new Draughts();
+        board = DraughtsBoard('board-container', config);
 
-// Draughtsboard start
-var boardEl = $('#board');
-var squareToHighlight;
-var orientation;
-var gameStatus = 'stopped';
+        // Update position info
+        function updatePosition(oldPos, newPos) {
+            const fen = board.fen();
+            document.getElementById('current-fen').value = fen;
 
-var removeHighlights = function (color) {
-  boardEl.find('.square-55d63').removeClass('highlight-' + color);
-};
+            // Update position info
+            const pieceCount = Object.keys(newPos).length;
+            document.getElementById('position-info').textContent = pieceCount + ' pieces';
 
-var unHighlightMoves = function () {
-  $('#board .square-55d63').css('background', '');
-};
+            // Update turn (simple alternating logic for demo)
+            const currentTurn = document.getElementById('turn').textContent;
+            document.getElementById('turn').textContent = currentTurn === 'White' ? 'Black' : 'White';
+        }
 
-var highlightMoves = function (square) {
-  var squareEl = $('#board .square-' + square);
+        // Drag start handler
+        function onDragStart(source, piece, position, orientation) {
+            if (!draggableEnabled) return false;
 
-  var background = '#a9a9a9';
-  if (squareEl.hasClass('black-3c85d')) {
-    background = '#696969';
-  }
-  squareEl.css('background', background);
-};
+            // For demo purposes, allow all moves
+            // In a real game, you'd check if it's the correct player's turn
+            return true;
+        }
 
-var onDragStart = function (source, piece, position) {
-  console.log(game.gameOver());
-  if (gameStatus == 'stopped' || game.turn() != orientation) {
-    return false;
-  }
-  if (game.gameOver() == true || (game.turn() == 'w' && piece.search('/^b/') !== -1) || game.turn() === 'b' && piece.search('/^w/') !== -1) {
-    return false;
-  }
-};
+        // Drop handler
+        function onDrop(source, target, position, orientation) {
+            removeHighlights();
 
-var onDrop = function(source, target) {
-  unHighlightMoves();
-  var move = game.move({
-    from: source,
-    to: target
-  });
+            // For demo purposes, allow all moves
+            // In a real game, you'd validate with draughts.js or similar library
+            return;
+        }
 
-  if (move === null) {
-    return 'snapback';
-  }
+        // Snap end handler
+        function onSnapEnd() {
+            updatePosition({}, board.position());
+        }
 
-  // remove black highlights
-  removeHighlights('black');
-  boardEl.find('.square-' + move.from).addClass('highlight-black');
-  squareToHighlight = move.to;
+        // Highlight possible moves on hover
+        function onMouseoverSquare(square, piece) {
+            if (!piece || !draggableEnabled) return;
 
-  // remove white highlights
-  // highlight white's move
-  removeHighlights('white');
-  boardEl.find('.square-' + source).addClass('highlight-white');
-  boardEl.find('.square-' + target).addClass('highlight-white');
-};
+            // Highlight the source square
+            highlightSquare(square);
+        }
 
-var onSnapEnd = function () {
-  board.position(game.fen());
-}
+        function onMouseoutSquare(square, piece) {
+            removeHighlights();
+        }
 
-var onMouseoverSquare = function (square, piece) {
-  if (!piece) {
-    return false;
-  }
-  var moves = game.moves({
-    square: square,
-    verbose: true
-  });
+        // Utility functions
+        function highlightSquare(square) {
+            const $square = $('#board-container .square-' + square);
+            $square.addClass('highlight-move');
+        }
 
-  if (moves.length === 0) {
-    return false;
-  }
+        function removeHighlights() {
+            $('#board-container .square-55d63').removeClass('highlight-move');
+        }
 
-  highlightMoves(square);
+        function setFEN() {
+            const fen = document.getElementById('fen-input').value.trim();
+            if (fen) {
+                try {
+                    board.position(fen);
+                    updatePosition({}, board.position());
+                    document.getElementById('fen-input').value = '';
+                } catch(e) {
+                    alert('Invalid FEN notation. Please check the format.');
+                }
+            }
+        }
 
-  moves.forEach(function(move) {
-    highlightMoves(move.to);
-  });
-};
+        function loadExample(fen) {
+            board.position(fen);
+            updatePosition({}, board.position());
+        }
 
-var onMouseoutSquare = function (square, piece) {
-  unHighlightMoves();
-}
+        function toggleDraggable() {
+            draggableEnabled = !draggableEnabled;
+            const btn = event.target;
+            btn.textContent = draggableEnabled ? 'Toggle Dragging' : 'Enable Dragging';
+            btn.style.background = draggableEnabled
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                : 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+        }
 
-var updateStatus = function(move) {
-  var status = '';
+        // Initialize current FEN display
+        document.getElementById('current-fen').value = board.fen();
 
-  var moveColor = 'White';
-  if (game.turn() === 'b') {
-    moveColor = 'Black';
-  }
-
-  if (game.gameOver() === true) {
-    status = 'Game over, ' + moveColor + ' is in checkmate.';
-  }
-
-}
-
-var onMoveEnd = function() {
-  boardEl.find('.square-' + squareToHighlight).addClass('highlight-black');
-};
-var board;
-
-var initialConfig = {
-  showNotation: true,
-  position: 'start',
-  draggable: true,
-  pieceTheme: 'unicode',
-  showErrors: 'console',
-  ondragstart: onDragStart,
-  onDrop: onDrop,
-  onSnapEnd: onSnapEnd,
-  onMouseoutSquare: onMouseoutSquare,
-  onMouseoverSquare: onMouseoverSquare,
-  onMoveEnd: onMoveEnd
-};
-
-board = DraughtsBoard('board', initialConfig);
+        // Handle Enter key in FEN input
+        document.getElementById('fen-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                setFEN();
+            }
+        });
     </script>
 </body>
-
 </html>
